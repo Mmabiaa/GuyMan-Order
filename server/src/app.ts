@@ -23,6 +23,28 @@ export function createApp() {
     })
   )
 
+  app.get("/v1/docs", (_req, res) => {
+    res.json({
+      ok: true,
+      service: "guy-man-backend",
+      version: "0.1.0",
+      endpoints: [
+        { method: "GET", path: "/v1/healthz", auth: "none" },
+        { method: "POST", path: "/v1/auth/login", auth: "none" },
+        { method: "POST", path: "/v1/auth/logout", auth: "cookie (auth-token)" },
+        { method: "GET", path: "/v1/auth/me", auth: "cookie (auth-token)" },
+        { method: "GET", path: "/v1/orders", auth: "cookie (auth-token)" },
+        { method: "POST", path: "/v1/orders", auth: "cookie (auth-token)" },
+        {
+          method: "POST",
+          path: "/v1/orders/:id/complete",
+          auth: "cookie (auth-token)"
+        },
+        { method: "GET", path: "/v1/transactions", auth: "cookie (auth-token)" }
+      ]
+    })
+  })
+
   app.get("/v1/healthz", (_req, res) => res.json({ ok: true }))
 
   app.use("/v1/auth", authRouter)
