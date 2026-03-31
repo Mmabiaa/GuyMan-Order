@@ -5,13 +5,13 @@ import { OrderForm } from "@/components/order-form"
 import { OrdersTable } from "@/components/orders-table"
 import { UtensilsCrossed, ClipboardList, LayoutDashboard } from "lucide-react"
 import { TransactionsTable } from "@/components/transactions-table"
+import type { Order } from "@/lib/store"
 import {
-  getOrders,
-  saveOrders,
-  getTransactions,
-  saveTransactions,
-  type Order,
-} from "@/lib/store"
+  completeOrder,
+  createOrder,
+  listActiveOrders,
+  listTransactions
+} from "@/lib/backendClient"
 import { cn } from "@/lib/utils"
 
 type View = "orders" | "transactions"
@@ -22,11 +22,36 @@ export function Dashboard() {
   const [currentView, setCurrentView] = useState<View>("orders")
   const [mounted, setMounted] = useState(false)
 
-  // Load data from localStorage on mount
+  // Load data from backend on mount
   useEffect(() => {
-    setOrders(getOrders())
-    setTransactions(getTransactions())
-    setMounted(true)
+    let cancelled = false
+
+    async function load() {
+      try {
+        const [activeOrders, txs] = await Promise.all([
+          listActiveOrders(),
+          listTransactions()
+        ])
+        if (cancelled) return
+        setOrders(activeOrders)
+        setTransactions(txs)
+      } catch (err: any) {
+        if (err?.message === "unauthorized") {
+          window.location.href = "/login"
+          return
+        }
+        // eslint-disable-next-line no-console
+        console.error(err)
+      } finally {
+        if (!cancelled) setMounted(true)
+      }
+    }
+
+    void load()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const handleAddOrder = useCallback(
@@ -37,37 +62,32 @@ export function Dashboard() {
       size: string
       amount: number
     }) => {
-      const newOrder: Order = {
-        id: crypto.randomUUID(),
-        ...orderData,
-        createdAt: new Date().toISOString(),
-        completed: false,
-      }
-      const updatedOrders = [...orders, newOrder]
-      setOrders(updatedOrders)
-      saveOrders(updatedOrders)
+      void (async () => {
+        const created = await createOrder(orderData)
+        setOrders((prev) => [...prev, created])
+      })()
     },
-    [orders]
+    []
   )
 
   const handleCompleteOrder = useCallback(
     (id: string) => {
-      const orderToComplete = orders.find((o) => o.id === id)
-      if (!orderToComplete) return
-
-      const completedOrder = { ...orderToComplete, completed: true }
-
-      // Remove from orders
-      const updatedOrders = orders.filter((o) => o.id !== id)
-      setOrders(updatedOrders)
-      saveOrders(updatedOrders)
-
-      // Add to transactions
-      const updatedTransactions = [...transactions, completedOrder]
-      setTransactions(updatedTransactions)
-      saveTransactions(updatedTransactions)
+      void (async () => {
+        try {
+          const completed = await completeOrder(id)
+          setOrders((prev) => prev.filter((o) => o.id !== id))
+          setTransactions((prev) => [...prev, completed])
+        } catch (err: any) {
+          if (err?.message === "unauthorized") {
+            window.location.href = "/login"
+            return
+          }
+          // eslint-disable-next-line no-console
+          console.error(err)
+        }
+      })()
     },
-    [orders, transactions]
+    []
   )
 
   const totalAmount = orders.reduce((sum, order) => sum + order.amount, 0)
