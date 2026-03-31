@@ -40,6 +40,23 @@ The frontend currently stores orders/transactions in local state (`localStorage`
 
 See the backend contract in `server/readme.md`.
 
+## How to Run the Backend
+
+1. Ensure you have MongoDB available and create `server/.env` with:
+   - `MONGODB_URI`
+   - `JWT_SECRET`
+   - (optional) `PORT`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `CORS_ORIGIN`
+2. Install and run:
+   ```bash
+   cd server
+   npm install
+   npm run dev
+   ```
+3. The backend exposes:
+   - `GET http://localhost:<PORT>/v1/healthz`
+   - `POST http://localhost:<PORT>/v1/auth/login`
+   - `GET http://localhost:<PORT>/v1/orders`
+
 ## Technical Stack (Frontend)
 
 - **Framework**: Next.js (App Router, Server Actions, Middleware)
