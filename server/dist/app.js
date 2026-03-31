@@ -9,6 +9,7 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const helmet_1 = __importDefault(require("helmet"));
 const cors_1 = __importDefault(require("cors"));
 const morgan_1 = __importDefault(require("morgan"));
+const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const env_1 = require("./config/env");
 const auth_routes_1 = require("./modules/auth/auth.routes");
 const orders_routes_1 = require("./modules/orders/orders.routes");
@@ -23,27 +24,144 @@ function createApp() {
         origin: env_1.env.corsOrigin,
         credentials: true
     }));
-    app.get("/v1/docs", (_req, res) => {
-        res.json({
-            ok: true,
-            service: "guy-man-backend",
-            version: "0.1.0",
-            endpoints: [
-                { method: "GET", path: "/v1/healthz", auth: "none" },
-                { method: "POST", path: "/v1/auth/login", auth: "none" },
-                { method: "POST", path: "/v1/auth/logout", auth: "cookie (auth-token)" },
-                { method: "GET", path: "/v1/auth/me", auth: "cookie (auth-token)" },
-                { method: "GET", path: "/v1/orders", auth: "cookie (auth-token)" },
-                { method: "POST", path: "/v1/orders", auth: "cookie (auth-token)" },
-                {
-                    method: "POST",
-                    path: "/v1/orders/:id/complete",
-                    auth: "cookie (auth-token)"
+    const openapiSpec = {
+        openapi: "3.0.3",
+        info: { title: "GuyMan Backend", version: "0.1.0" },
+        servers: [{ url: `http://localhost:${env_1.env.port}/v1` }],
+        tags: [
+            { name: "auth" },
+            { name: "orders" },
+            { name: "transactions" }
+        ],
+        components: {
+            securitySchemes: {
+                authTokenCookie: {
+                    type: "apiKey",
+                    in: "cookie",
+                    name: "auth-token"
+                }
+            }
+        },
+        paths: {
+            "/healthz": {
+                get: {
+                    tags: ["auth"],
+                    summary: "Health check",
+                    responses: { "200": { description: "OK" } }
+                }
+            },
+            "/auth/login": {
+                post: {
+                    tags: ["auth"],
+                    summary: "Login",
+                    requestBody: {
+                        required: true,
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        username: { type: "string" },
+                                        password: { type: "string" }
+                                    },
+                                    required: ["username", "password"]
+                                }
+                            }
+                        }
+                    },
+                    responses: { "200": { description: "Logged in (cookie set)" } }
+                }
+            },
+            "/auth/logout": {
+                post: {
+                    tags: ["auth"],
+                    summary: "Logout",
+                    responses: { "200": { description: "Logged out (cookie cleared)" } }
+                }
+            },
+            "/auth/me": {
+                get: {
+                    tags: ["auth"],
+                    summary: "Current user",
+                    security: [{ authTokenCookie: [] }],
+                    responses: { "200": { description: "User info" }, "401": { description: "Unauthorized" } }
+                }
+            },
+            "/orders": {
+                get: {
+                    tags: ["orders"],
+                    summary: "List active orders",
+                    security: [{ authTokenCookie: [] }],
+                    responses: { "200": { description: "Active orders" } }
                 },
-                { method: "GET", path: "/v1/transactions", auth: "cookie (auth-token)" }
-            ]
-        });
-    });
+                post: {
+                    tags: ["orders"],
+                    summary: "Create order",
+                    security: [{ authTokenCookie: [] }],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        clientOrderId: { type: "string", nullable: true },
+                                        customerName: { type: "string" },
+                                        phoneNumber: { type: "string" },
+                                        foodItem: { type: "string" },
+                                        size: { type: "string" },
+                                        amount: { type: "number" }
+                                    },
+                                    required: [
+                                        "customerName",
+                                        "phoneNumber",
+                                        "foodItem",
+                                        "size",
+                                        "amount"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    responses: { "201": { description: "Created order" } }
+                }
+            },
+            "/orders/{id}/complete": {
+                post: {
+                    tags: ["orders"],
+                    summary: "Complete order",
+                    security: [{ authTokenCookie: [] }],
+                    parameters: [
+                        {
+                            name: "id",
+                            in: "path",
+                            required: true,
+                            schema: { type: "string" }
+                        }
+                    ],
+                    responses: { "200": { description: "Completed order" }, "404": { description: "Not found" } }
+                }
+            },
+            "/transactions": {
+                get: {
+                    tags: ["transactions"],
+                    summary: "List transactions (completed orders)",
+                    security: [{ authTokenCookie: [] }],
+                    parameters: [
+                        {
+                            name: "search",
+                            in: "query",
+                            required: false,
+                            schema: { type: "string" }
+                        }
+                    ],
+                    responses: { "200": { description: "Transactions" } }
+                }
+            }
+        }
+    };
+    app.get("/v1/openapi.json", (_req, res) => res.json(openapiSpec));
+    app.use("/v1/docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(openapiSpec));
     app.get("/v1/healthz", (_req, res) => res.json({ ok: true }));
     app.use("/v1/auth", auth_routes_1.authRouter);
     app.use("/v1", orders_routes_1.ordersRouter);
