@@ -1,43 +1,48 @@
-# Administration Dashboard - Authentication
+# GuyMan Administration Dashboard (Orders + Transactions)
 
-This project implements a secure administration dashboard using the Next.js App Router framework.
+This project implements a secure administration dashboard using the Next.js App Router framework. The dashboard supports:
 
-## Features Added
+- Admin login (protected routes via `middleware.ts`)
+- Creating active orders
+- Viewing active orders
+- Marking orders as complete (which becomes part of transaction history)
+- Viewing completed transactions
 
-1. **Authentication Middleware**
-   All application routes (except `/login` and static assets) are protected using Next.js middleware (`middleware.ts`).
-   Users attempting to access protected routes without a valid session are automatically redirected to the login page.
+## Demo Credentials (current frontend-only login)
 
-2. **Login Interface**
-   A clean, responsive login page (`/login`) is built with React Hook Form and Zod for robust client-side validation. The UI leverages Shadcn UI (Radix primitives) and Tailwind CSS for a polished look.
-
-3. **Secure Server Actions**
-   The login logic is handled securely via Next.js Server Actions (`app/login/actions.ts`). Upon successful authentication, an `HttpOnly`, `secure`, `SameSite=lax` cookie (`auth-token`) is set to maintain the user's session without exposing the token to client-side scripts.
-
-## Demo Credentials
-
-To log into the administration dashboard, use the following credentials:
+To log into the dashboard, use:
 
 - **Username**: `admin`
 - **Password**: `Admin@123.`
 
-## How to Run Locally
+## How to Run the Frontend Locally
 
 1. Ensure you have Node.js installed.
-2. Install dependencies (if not already installed):
+2. Install dependencies:
    ```bash
    npm install
    ```
-3. Run the development server:
+3. Run:
    ```bash
    npm run dev
    ```
-4. Open [http://localhost:3000](http://localhost:3000) in your browser. You will be automatically redirected to the login page.
-5. Enter the demo credentials to access the secure dashboard.
+4. Open [http://localhost:3000](http://localhost:3000). You will be redirected to `/login`.
 
-## Technical Stack
+## Backend (Node.js + MongoDB)
 
-- **Framework**: Next.js 15+ (App Router, Server Actions, Middleware)
+The frontend currently stores orders/transactions in local state (`localStorage`), but the next step is a dedicated backend that provides the required APIs:
+
+- Login authentication
+- Add orders
+- View active orders
+- Mark orders as complete
+- View transactions (completed orders)
+
+See the backend contract in `server/readme.md`.
+
+## Technical Stack (Frontend)
+
+- **Framework**: Next.js (App Router, Server Actions, Middleware)
 - **Styling**: Tailwind CSS
 - **Components**: Shadcn UI / Radix UI
 - **Form Validation**: React Hook Form, Zod
