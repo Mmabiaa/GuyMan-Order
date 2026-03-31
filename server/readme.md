@@ -305,7 +305,7 @@ Cookie behavior:
 
 ## 9. Frontend Integration Notes (Next.js)
 
-The current frontend uses `localStorage` and does not yet call the backend APIs.
+The dashboard calls the backend from the browser with `credentials: "include"` and uses the `auth-token` cookie set after login.
 
 When wiring it up, you’ll typically:
 - Use the dashboard’s existing `auth-token` cookie.
@@ -314,4 +314,25 @@ When wiring it up, you’ll typically:
 If the frontend and backend run on different origins during development, ensure:
 - cookie `SameSite`/`Secure` settings match the deployment origin expectations
 - CORS allows credentials
+
+---
+
+## 10. Deploying on Vercel (Node API)
+
+Vercel loads a **single entry file** for Node serverless functions. That file must **default-export** either:
+
+- an Express `app`, or  
+- a `(req, res) => void` handler function.
+
+This repo’s Express wiring lives in `createApp()` inside `src/app.ts`, which only has a **named** export. **Do not** point Vercel at `src/app.ts` as the function entry — you will see:
+
+`Invalid export found ... The default export must be a function or server.`
+
+Use **`src/handler.ts`** instead: it default-exports an async handler that connects MongoDB once, then delegates to `createApp()`.
+
+- Set the Vercel project **Root Directory** to `server` (if this backend is its own project), or configure routes so the built function uses `handler.ts`.
+- A `server/vercel.json` is included that routes all paths to `src/handler.ts`. If Vercel warns that `builds` is legacy, follow the dashboard prompts or migrate to the current “Functions” settings while keeping the same entry file.
+- Set production env vars in Vercel: `MONGODB_URI`, `JWT_SECRET`, `CORS_ORIGIN` (your frontend origin), etc.
+
+For long-lived WebSocket or always-on TCP, prefer a container/VM (Railway, Fly, Render) instead of serverless.
 
