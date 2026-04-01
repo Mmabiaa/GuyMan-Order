@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { PWARegister } from '@/components/pwa-register'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+// Avoid next/font/google here: `next build` fetches fonts from Google at build time and fails
+// when the build environment has no outbound access to fonts.googleapis.com (offline, firewall, CI).
 
 export const metadata: Metadata = {
   title: 'GuyMan Food Order System',

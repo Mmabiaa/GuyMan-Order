@@ -12,6 +12,14 @@ import { errorMiddleware } from "./shared/errorMiddleware"
 export function createApp() {
   const app = express()
 
+  // No /v1 prefix — useful for load balancers and mistaken /healthz vs /v1/healthz
+  app.get("/health", (_req, res) =>
+    res.json({ ok: true, service: "guy-man-backend" })
+  )
+  app.get("/healthz", (_req, res) =>
+    res.json({ ok: true, service: "guy-man-backend" })
+  )
+
   app.use(helmet())
   app.use(express.json({ limit: "1mb" }))
   app.use(cookieParser())
