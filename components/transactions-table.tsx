@@ -61,8 +61,8 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative max-w-sm flex-1">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative min-w-0 w-full max-w-sm sm:flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search transactions..."
@@ -71,16 +71,16 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
             className="bg-input pl-9"
           />
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-left sm:text-right">
           <p className="text-sm text-muted-foreground">Total Revenue</p>
-          <p className="text-xl font-semibold text-foreground">
+          <p className="text-lg font-semibold text-foreground sm:text-xl">
             {formatCurrency(totalRevenue)}
           </p>
         </div>
       </div>
 
       {filteredTransactions.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card p-12 text-center">
+        <div className="rounded-lg border border-border bg-card p-8 text-center sm:p-12">
           <p className="text-muted-foreground">
             {transactions.length === 0
               ? "No completed transactions yet."
@@ -88,7 +88,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-border bg-card">
+        <div className="min-w-0 overflow-hidden rounded-lg border border-border bg-card">
           <Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">

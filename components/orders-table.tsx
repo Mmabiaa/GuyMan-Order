@@ -47,14 +47,14 @@ export function OrdersTable({ orders, onCompleteOrder }: OrdersTableProps) {
 
   if (orders.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card p-12 text-center">
+      <div className="rounded-lg border border-border bg-card p-8 text-center sm:p-12">
         <p className="text-muted-foreground">No orders yet. Add your first order above.</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-border bg-card">
       <Table>
         <TableHeader>
           <TableRow className="border-border hover:bg-transparent">
@@ -76,7 +76,7 @@ export function OrdersTable({ orders, onCompleteOrder }: OrdersTableProps) {
                   size="sm"
                   onClick={() => onCompleteOrder(order.id)}
                   aria-label="Mark as completed"
-                  className="h-8 w-8 bg-emerald-600 hover:bg-emerald-500 text-white"
+                  className="h-10 w-10 shrink-0 bg-emerald-600 text-white hover:bg-emerald-500 sm:h-8 sm:w-8"
                 >
                   <Check className="h-4 w-4" />
                 </Button>

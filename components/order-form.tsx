@@ -76,8 +76,13 @@ export function OrderForm({ onAddOrder }: OrderFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg border border-border bg-card p-6">
-      <h2 className="mb-6 text-lg font-medium text-foreground">New Order</h2>
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-lg border border-border bg-card p-4 sm:p-6"
+    >
+      <h2 className="mb-4 text-lg font-medium text-foreground sm:mb-6">
+        New Order
+      </h2>
       <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Field>
           <FieldLabel>Customer Name</FieldLabel>
@@ -138,8 +143,8 @@ export function OrderForm({ onAddOrder }: OrderFormProps) {
           </div>
         </Field>
       </FieldGroup>
-      <div className="mt-6 flex justify-end">
-        <Button type="submit" className="gap-2">
+      <div className="mt-6 flex justify-stretch sm:justify-end">
+        <Button type="submit" className="min-h-10 w-full gap-2 sm:w-auto">
           <Plus className="h-4 w-4" />
           Add Order
         </Button>
