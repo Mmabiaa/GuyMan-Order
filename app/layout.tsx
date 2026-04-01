@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
-import { PWARegister } from '@/components/pwa-register'
 import './globals.css'
 
 // Avoid next/font/google here: `next build` fetches fonts from Google at build time and fails
@@ -34,7 +33,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <PWARegister />
         {children}
         <Analytics />
       </body>
