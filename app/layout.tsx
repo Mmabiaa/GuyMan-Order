@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
+import { ClearStaleServiceWorker } from '@/components/clear-service-worker'
 import './globals.css'
 
 // Avoid next/font/google here: `next build` fetches fonts from Google at build time and fails
@@ -33,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
+        <ClearStaleServiceWorker />
         {children}
         <Analytics />
       </body>
