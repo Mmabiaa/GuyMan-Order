@@ -4,11 +4,21 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { OrderForm } from "@/components/order-form"
 import { OrdersTable } from "@/components/orders-table"
-import { UtensilsCrossed, ClipboardList, LayoutDashboard } from "lucide-react"
+import {
+  UtensilsCrossed,
+  ClipboardList,
+  LayoutDashboard,
+  LogOut
+} from "lucide-react"
 import { TransactionsTable } from "@/components/transactions-table"
 import type { Order } from "@/lib/store"
-import { postCompleteOrder, postOrder } from "@/lib/api/browser-transport"
+import {
+  postCompleteOrder,
+  postLogout,
+  postOrder
+} from "@/lib/api/browser-transport"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 type View = "orders" | "transactions"
 
@@ -27,6 +37,7 @@ export function Dashboard({
     initialTransactions
   )
   const [currentView, setCurrentView] = useState<View>("orders")
+  const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
     setOrders(initialOrders)
@@ -79,67 +90,89 @@ export function Dashboard({
 
   const totalAmount = orders.reduce((sum, order) => sum + order.amount, 0)
 
+  const handleLogout = useCallback(() => {
+    setLoggingOut(true)
+    void postLogout().finally(() => {
+      window.location.href = "/login"
+    })
+  }, [])
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <UtensilsCrossed className="h-6 w-6 text-foreground" />
-            <h1 className="text-xl font-semibold text-foreground">Guy Man</h1>
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <UtensilsCrossed className="h-6 w-6 shrink-0 text-foreground" />
+            <h1 className="truncate text-lg font-semibold text-foreground sm:text-xl">
+              Guy Man
+            </h1>
           </div>
-          <nav className="flex gap-1">
-            <button
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <nav className="flex min-w-0 flex-1 flex-wrap gap-1 sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setCurrentView("orders")}
+                className={cn(
+                  "flex min-h-10 min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors sm:px-4",
+                  currentView === "orders"
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                )}
+              >
+                <LayoutDashboard className="h-4 w-4 shrink-0" />
+                <span className="truncate">Orders</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentView("transactions")}
+                className={cn(
+                  "flex min-h-10 min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors sm:px-4",
+                  currentView === "transactions"
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                )}
+              >
+                <ClipboardList className="h-4 w-4 shrink-0" />
+                <span className="truncate">Transactions</span>
+                {transactions.length > 0 && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+                    {transactions.length}
+                  </span>
+                )}
+              </button>
+            </nav>
+            <Button
               type="button"
-              onClick={() => setCurrentView("orders")}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                currentView === "orders"
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-              )}
+              variant="outline"
+              size="sm"
+              className="w-full shrink-0 sm:w-auto"
+              disabled={loggingOut}
+              onClick={handleLogout}
             >
-              <LayoutDashboard className="h-4 w-4" />
-              Orders
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentView("transactions")}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                currentView === "transactions"
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-              )}
-            >
-              <ClipboardList className="h-4 w-4" />
-              Transactions
-              {transactions.length > 0 && (
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
-                  {transactions.length}
-                </span>
-              )}
-            </button>
-          </nav>
+              <LogOut className="mr-2 h-4 w-4" />
+              {loggingOut ? "Signing out…" : "Log out"}
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         {currentView === "orders" ? (
           <>
-            <div className="mb-8 flex items-center justify-between">
+            <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-2xl font-semibold text-foreground">
+                <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
                   Active Orders
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-sm text-muted-foreground sm:text-base">
                   {orders.length} {orders.length === 1 ? "order" : "orders"}{" "}
                   pending
                 </p>
               </div>
               {orders.length > 0 && (
-                <div className="text-right">
+                <div className="text-left sm:text-right">
                   <p className="text-sm text-muted-foreground">Pending Total</p>
-                  <p className="text-2xl font-semibold text-foreground">
+                  <p className="text-xl font-semibold text-foreground sm:text-2xl">
                     {totalAmount} GHS
                   </p>
                 </div>
@@ -153,11 +186,11 @@ export function Dashboard({
           </>
         ) : (
           <>
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-foreground">
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
                 Transaction History
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-sm text-muted-foreground sm:text-base">
                 Record of all completed orders
               </p>
             </div>

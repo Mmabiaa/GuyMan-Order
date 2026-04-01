@@ -56,3 +56,12 @@ export async function postCompleteOrder(orderId: string): Promise<Order> {
   const raw = (await res.json()) as Record<string, unknown>
   return mapOrderDto(raw)
 }
+
+export async function postLogout(): Promise<void> {
+  await fetch(`${PROXY}/v1/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({})
+  })
+}
