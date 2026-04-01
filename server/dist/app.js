@@ -16,6 +16,9 @@ const orders_routes_1 = require("./modules/orders/orders.routes");
 const errorMiddleware_1 = require("./shared/errorMiddleware");
 function createApp() {
     const app = (0, express_1.default)();
+    // No /v1 prefix — useful for load balancers and mistaken /healthz vs /v1/healthz
+    app.get("/health", (_req, res) => res.json({ ok: true, service: "guy-man-backend" }));
+    app.get("/healthz", (_req, res) => res.json({ ok: true, service: "guy-man-backend" }));
     app.use((0, helmet_1.default)());
     app.use(express_1.default.json({ limit: "1mb" }));
     app.use((0, cookie_parser_1.default)());

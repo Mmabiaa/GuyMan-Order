@@ -336,3 +336,33 @@ Use **`src/handler.ts`** instead: it default-exports an async handler that conne
 
 For long-lived WebSocket or always-on TCP, prefer a container/VM (Railway, Fly, Render) instead of serverless.
 
+### 10.1 “Serverless” vs a traditional Node server
+
+On **Vercel**, your Express app is still Express — but the **platform** runs it as a **serverless function** (cold starts, no persistent process, request timeouts). That is expected. It is **not** the same as `node index.js` on a VPS.
+
+If you need a **long-running** TCP server (or you do not want serverless limits), deploy the `server/` package to **Railway, Render, Fly.io, DigitalOcean App Platform**, etc., using `npm run start` after `npm run build`.
+
+### 10.2 MongoDB Atlas from Vercel (common errors)
+
+If logs show:
+
+- `MongooseServerSelectionError` / `Could not connect to any servers in your MongoDB Atlas cluster` / IP whitelist  
+- `Operation ... buffering timed out after 10000ms`
+
+then the function **cannot reach Atlas** (network rules) or **`MONGODB_URI` is missing/wrong** in Vercel **Environment Variables** (Production + Preview as needed).
+
+**Atlas Network Access**
+
+- Open Atlas → **Network Access** → add **`0.0.0.0/0`** (allow from anywhere) **or** use Atlas **“Vercel”** integration if available.  
+- Vercel outbound IPs are **not** a single fixed IP; a tight single-IP allowlist usually breaks serverless.
+
+**Env on Vercel**
+
+- Set `MONGODB_URI` to your Atlas SRV connection string (user + password).  
+- Redeploy after changing env vars.
+
+**Health checks without DB**
+
+- `GET /health`, `GET /healthz`, and `GET /v1/healthz` respond **without** waiting for MongoDB (use these to verify the deployment is up).  
+- API routes that use the database still require a working Atlas connection.
+
