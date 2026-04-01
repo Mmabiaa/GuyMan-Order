@@ -1,6 +1,12 @@
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import { LoginForm } from "./login-form"
 
-export default function LoginPage() {
+export default async function LoginPage() {
+    if ((await cookies()).get("auth-token")?.value) {
+        redirect("/")
+    }
+
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
             <div className="w-full max-w-sm space-y-6 rounded-xl border bg-card p-6 shadow-sm">

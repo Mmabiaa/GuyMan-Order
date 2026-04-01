@@ -1,58 +1,37 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { OrderForm } from "@/components/order-form"
 import { OrdersTable } from "@/components/orders-table"
 import { UtensilsCrossed, ClipboardList, LayoutDashboard } from "lucide-react"
 import { TransactionsTable } from "@/components/transactions-table"
 import type { Order } from "@/lib/store"
-import {
-  completeOrder,
-  createOrder,
-  listActiveOrders,
-  listTransactions
-} from "@/lib/backendClient"
+import { postCompleteOrder, postOrder } from "@/lib/api/browser-transport"
 import { cn } from "@/lib/utils"
 
 type View = "orders" | "transactions"
 
-export function Dashboard() {
-  const [orders, setOrders] = useState<Order[]>([])
-  const [transactions, setTransactions] = useState<Order[]>([])
+type DashboardProps = {
+  initialOrders: Order[]
+  initialTransactions: Order[]
+}
+
+export function Dashboard({
+  initialOrders,
+  initialTransactions
+}: DashboardProps) {
+  const router = useRouter()
+  const [orders, setOrders] = useState<Order[]>(initialOrders)
+  const [transactions, setTransactions] = useState<Order[]>(
+    initialTransactions
+  )
   const [currentView, setCurrentView] = useState<View>("orders")
-  const [mounted, setMounted] = useState(false)
 
-  // Load data from backend on mount
   useEffect(() => {
-    let cancelled = false
-
-    async function load() {
-      try {
-        const [activeOrders, txs] = await Promise.all([
-          listActiveOrders(),
-          listTransactions()
-        ])
-        if (cancelled) return
-        setOrders(activeOrders)
-        setTransactions(txs)
-      } catch (err: any) {
-        if (err?.message === "unauthorized") {
-          window.location.href = "/login"
-          return
-        }
-        // eslint-disable-next-line no-console
-        console.error(err)
-      } finally {
-        if (!cancelled) setMounted(true)
-      }
-    }
-
-    void load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
+    setOrders(initialOrders)
+    setTransactions(initialTransactions)
+  }, [initialOrders, initialTransactions])
 
   const handleAddOrder = useCallback(
     (orderData: {
@@ -63,22 +42,11 @@ export function Dashboard() {
       amount: number
     }) => {
       void (async () => {
-        const created = await createOrder(orderData)
-        setOrders((prev) => [...prev, created])
-      })()
-    },
-    []
-  )
-
-  const handleCompleteOrder = useCallback(
-    (id: string) => {
-      void (async () => {
         try {
-          const completed = await completeOrder(id)
-          setOrders((prev) => prev.filter((o) => o.id !== id))
-          setTransactions((prev) => [...prev, completed])
-        } catch (err: any) {
-          if (err?.message === "unauthorized") {
+          await postOrder(orderData)
+          router.refresh()
+        } catch (err: unknown) {
+          if (err instanceof Error && err.message === "unauthorized") {
             window.location.href = "/login"
             return
           }
@@ -87,18 +55,29 @@ export function Dashboard() {
         }
       })()
     },
-    []
+    [router]
+  )
+
+  const handleCompleteOrder = useCallback(
+    (id: string) => {
+      void (async () => {
+        try {
+          await postCompleteOrder(id)
+          router.refresh()
+        } catch (err: unknown) {
+          if (err instanceof Error && err.message === "unauthorized") {
+            window.location.href = "/login"
+            return
+          }
+          // eslint-disable-next-line no-console
+          console.error(err)
+        }
+      })()
+    },
+    [router]
   )
 
   const totalAmount = orders.reduce((sum, order) => sum + order.amount, 0)
-
-  if (!mounted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -106,12 +85,11 @@ export function Dashboard() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <UtensilsCrossed className="h-6 w-6 text-foreground" />
-            <h1 className="text-xl font-semibold text-foreground">
-              Guy Man
-            </h1>
+            <h1 className="text-xl font-semibold text-foreground">Guy Man</h1>
           </div>
           <nav className="flex gap-1">
             <button
+              type="button"
               onClick={() => setCurrentView("orders")}
               className={cn(
                 "flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors",
@@ -124,6 +102,7 @@ export function Dashboard() {
               Orders
             </button>
             <button
+              type="button"
               onClick={() => setCurrentView("transactions")}
               className={cn(
                 "flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors",
@@ -153,7 +132,8 @@ export function Dashboard() {
                   Active Orders
                 </h2>
                 <p className="text-muted-foreground">
-                  {orders.length} {orders.length === 1 ? "order" : "orders"} pending
+                  {orders.length} {orders.length === 1 ? "order" : "orders"}{" "}
+                  pending
                 </p>
               </div>
               {orders.length > 0 && (
