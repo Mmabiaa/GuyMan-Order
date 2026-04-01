@@ -305,11 +305,11 @@ Cookie behavior:
 
 ## 9. Frontend Integration Notes (Next.js)
 
-The dashboard calls the backend from the browser with `credentials: "include"` and uses the `auth-token` cookie set after login.
+The Next.js UI calls the backend **only through HTTP** (same-origin `/api/proxy/...` from the browser, or direct `BACKEND_URL` from server components for initial dashboard data). Login is `POST /v1/auth/login` on the API; the proxy forwards `Set-Cookie` so `auth-token` is stored on the Next.js host.
 
-When wiring it up, you’ll typically:
-- Use the dashboard’s existing `auth-token` cookie.
-- Call backend endpoints from the client (or via Next.js route handlers/server actions) so the cookie is sent automatically.
+When wiring clients:
+- Send `credentials: "include"` for browser calls to `/api/proxy`.
+- Set `BACKEND_URL` on the Next deployment for server-side API calls and the proxy.
 
 If the frontend and backend run on different origins during development, ensure:
 - cookie `SameSite`/`Secure` settings match the deployment origin expectations

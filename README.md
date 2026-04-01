@@ -28,9 +28,18 @@ To log into the dashboard, use:
    ```
 4. Open [http://localhost:3000](http://localhost:3000). You will be redirected to `/login`.
 
+## Environment (frontend)
+
+When the UI and API are on **different hosts** (e.g. `guyman-order.vercel.app` and `api-*.vercel.app`), the browser cannot send the httpOnly `auth-token` cookie to the API. The app uses a **same-origin proxy** at `/api/proxy/*` that forwards requests and attaches the cookie server-side.
+
+- **`BACKEND_URL`** (recommended, server-only): full origin of the API, e.g. `https://api-guyman-order.vercel.app`. Used by the login server action and the proxy route.
+- **`NEXT_PUBLIC_BACKEND_URL`**: optional fallback for `BACKEND_URL` (exposed to the client; prefer `BACKEND_URL` in production).
+
+On the **API** deployment, set **`CORS_ORIGIN`** to your Next.js origin (e.g. `https://guyman-order.vercel.app`).
+
 ## Backend (Node.js + MongoDB)
 
-The frontend currently stores orders/transactions in local state (`localStorage`), but the next step is a dedicated backend that provides the required APIs:
+The **backend** owns authentication, validation, and persistence. The Next.js app is a UI shell: it loads data via the API (server-side `loadDashboardInitialData` for the home page, `/api/proxy` for browser mutations and login), and does not duplicate business rules. The backend provides:
 
 - Login authentication
 - Add orders
