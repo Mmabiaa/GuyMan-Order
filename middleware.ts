@@ -16,6 +16,6 @@ export const config = {
         /*
          * Match all request paths except login, API routes, and Next/static assets.
          */
-        '/((?!login|api|_next/static|_next/image|manifest.json|favicon.ico|icon-).*)',
+        '/((?!login|api|_next/static|_next/image|manifest.json|favicon.ico|icon-|sw\\.js).*)',
     ],
 }

@@ -34,7 +34,7 @@ When the UI and API are on **different hosts** (e.g. `guyman-order.vercel.app` a
 
 - **`BACKEND_URL`** (recommended, server-only): full origin of the API, e.g. `https://api-guyman-order.vercel.app`. Used by the dashboard server load and the `/api/proxy` route.
 
-There is **no service worker** or client-side response caching: pages and API calls use fresh data (`cache: 'no-store'` where relevant, and `router.refresh()` after mutations).
+There is **no app logic registering a service worker**. A minimal `public/sw.js` and `ClearStaleServiceWorker` exist only so browsers can **drop legacy workers/caches** from older deploys. Data stays fresh (`cache: 'no-store'` where used, `router.refresh()` after mutations).
 - **`NEXT_PUBLIC_BACKEND_URL`**: optional fallback for `BACKEND_URL` (exposed to the client; prefer `BACKEND_URL` in production).
 
 On the **API** deployment, set **`CORS_ORIGIN`** to your Next.js origin (e.g. `https://guyman-order.vercel.app`).
