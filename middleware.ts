@@ -14,17 +14,8 @@ export function middleware(request: NextRequest) {
 export const config = {
     matcher: [
         /*
-         * Match all request paths except for the ones starting with:
-         * - login
-         * - api (API routes)
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - manifest.json
-         * - favicon.ico
-         * - icon-*.png
-         * - sw.js
-         * - workbox-*.js
+         * Match all request paths except login, API routes, and Next/static assets.
          */
-        '/((?!login|api|_next/static|_next/image|manifest.json|favicon.ico|icon-|sw.js|workbox-).*)',
+        '/((?!login|api|_next/static|_next/image|manifest.json|favicon.ico|icon-).*)',
     ],
 }

@@ -32,7 +32,9 @@ To log into the dashboard, use:
 
 When the UI and API are on **different hosts** (e.g. `guyman-order.vercel.app` and `api-*.vercel.app`), the browser cannot send the httpOnly `auth-token` cookie to the API. The app uses a **same-origin proxy** at `/api/proxy/*` that forwards requests and attaches the cookie server-side.
 
-- **`BACKEND_URL`** (recommended, server-only): full origin of the API, e.g. `https://api-guyman-order.vercel.app`. Used by the login server action and the proxy route.
+- **`BACKEND_URL`** (recommended, server-only): full origin of the API, e.g. `https://api-guyman-order.vercel.app`. Used by the dashboard server load and the `/api/proxy` route.
+
+There is **no service worker** or client-side response caching: pages and API calls use fresh data (`cache: 'no-store'` where relevant, and `router.refresh()` after mutations).
 - **`NEXT_PUBLIC_BACKEND_URL`**: optional fallback for `BACKEND_URL` (exposed to the client; prefer `BACKEND_URL` in production).
 
 On the **API** deployment, set **`CORS_ORIGIN`** to your Next.js origin (e.g. `https://guyman-order.vercel.app`).

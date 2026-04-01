@@ -10,7 +10,14 @@ export default async function Page() {
     redirect("/login")
   }
 
-  const data = await loadDashboardInitialData(token)
+  let data: Awaited<ReturnType<typeof loadDashboardInitialData>>
+  try {
+    data = await loadDashboardInitialData(token)
+  } catch {
+    cookieStore.delete("auth-token")
+    redirect("/login")
+  }
+
   if (data === "unauthorized") {
     cookieStore.delete("auth-token")
     redirect("/login")
