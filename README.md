@@ -8,12 +8,6 @@ This project implements a secure administration dashboard using the Next.js App 
 - Marking orders as complete (which becomes part of transaction history)
 - Viewing completed transactions
 
-## Demo Credentials (current frontend-only login)
-
-To log into the dashboard, use:
-
-- **Username**: `admin`
-- **Password**: `Admin@123.`
 
 ## How to Run the Frontend Locally
 
