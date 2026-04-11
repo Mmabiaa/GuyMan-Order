@@ -80,7 +80,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="admin" {...field} />
+                <Input placeholder="username" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -95,7 +95,7 @@ export function LoginForm() {
               <FormControl>
                 <Input
                   type="password"
-                  placeholder="Admin@123."
+                  placeholder="password"
                   {...field}
                 />
               </FormControl>
