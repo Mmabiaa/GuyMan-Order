@@ -5,6 +5,8 @@ import { HttpError } from "../../shared/httpError"
 import { requireAuth } from "../auth/auth.middleware"
 import {
   completeOrderController,
+  updateOrderController,
+  deleteOrderController,
   updatePaymentStatusController,
   createOrderController,
   listActiveOrdersController,
@@ -55,6 +57,24 @@ ordersRouter.post(
   "/orders/:id/update-payment-status",
   requireAuth,
   asyncHandler(updatePaymentStatusController)
+)
+
+ordersRouter.put(
+  "/orders/:id",
+  requireAuth,
+  asyncHandler(updateOrderController)
+)
+
+ordersRouter.delete(
+  "/orders/:id",
+  requireAuth,
+  asyncHandler(deleteOrderController)
+)
+
+ordersRouter.get(
+  "/orders",
+  requireAuth,
+  asyncHandler(listActiveOrdersController)
 )
 
 ordersRouter.get(

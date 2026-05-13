@@ -1,5 +1,13 @@
 import type { Request, Response } from "express"
-import { createOrder, completeOrder, updatePaymentStatus, listActiveOrders, listTransactions } from "./orders.service"
+import {
+  createOrder,
+  completeOrder,
+  updateOrder,
+  deleteOrder,
+  updatePaymentStatus,
+  listActiveOrders,
+  listTransactions
+} from "./orders.service"
 
 export async function createOrderController(req: Request, res: Response) {
   const dto = await createOrder({
@@ -12,6 +20,18 @@ export async function createOrderController(req: Request, res: Response) {
   })
 
   return res.status(201).json(dto)
+}
+
+export async function updateOrderController(req: Request, res: Response) {
+  if (!req.user) return res.status(401).json({ error: "Unauthorized" })
+  const dto = await updateOrder(req.params.id, req.body)
+  return res.json(dto)
+}
+
+export async function deleteOrderController(req: Request, res: Response) {
+  if (!req.user) return res.status(401).json({ error: "Unauthorized" })
+  await deleteOrder(req.params.id)
+  return res.json({ success: true })
 }
 
 export async function listActiveOrdersController(_req: Request, res: Response) {

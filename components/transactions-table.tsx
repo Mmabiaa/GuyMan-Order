@@ -50,14 +50,16 @@ export function TransactionsTable({ transactions, onUpdatePaymentStatus }: Trans
       filtered = filtered.filter(t => t.paymentStatus === statusFilter)
     }
 
-    // Date range filtering
-    if (startDate) {
-      filtered = filtered.filter(t => new Date(t.createdAt) >= new Date(startDate))
-    }
-    if (endDate) {
-      const end = new Date(endDate)
-      end.setHours(23, 59, 59, 999)
-      filtered = filtered.filter(t => new Date(t.createdAt) <= end)
+    // Date range filtering - Only for History
+    if (activeTab === "history") {
+      if (startDate) {
+        filtered = filtered.filter(t => new Date(t.createdAt) >= new Date(startDate))
+      }
+      if (endDate) {
+        const end = new Date(endDate)
+        end.setHours(23, 59, 59, 999)
+        filtered = filtered.filter(t => new Date(t.createdAt) <= end)
+      }
     }
 
     // Search query filtering
@@ -197,32 +199,34 @@ export function TransactionsTable({ transactions, onUpdatePaymentStatus }: Trans
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 pt-2 border-t border-border/50">
-          <div className="flex flex-1 min-w-[140px] flex-col gap-1">
-            <label className="text-[10px] font-bold uppercase text-muted-foreground">Start Date</label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="h-9 text-xs"
-            />
+        {activeTab === "history" && (
+          <div className="flex flex-wrap gap-3 pt-2 border-t border-border/50">
+            <div className="flex flex-1 min-w-[140px] flex-col gap-1">
+              <label className="text-[10px] font-bold uppercase text-muted-foreground">Start Date</label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="h-9 text-xs"
+              />
+            </div>
+            <div className="flex flex-1 min-w-[140px] flex-col gap-1">
+              <label className="text-[10px] font-bold uppercase text-muted-foreground">End Date</label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="h-9 text-xs"
+              />
+            </div>
+            <button
+              onClick={() => { setStartDate(""); setEndDate(""); setStatusFilter("ALL"); setSearchQuery("") }}
+              className="self-end px-3 py-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Clear All
+            </button>
           </div>
-          <div className="flex flex-1 min-w-[140px] flex-col gap-1">
-            <label className="text-[10px] font-bold uppercase text-muted-foreground">End Date</label>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="h-9 text-xs"
-            />
-          </div>
-          <button
-            onClick={() => { setStartDate(""); setEndDate(""); setStatusFilter("ALL"); setSearchQuery("") }}
-            className="self-end px-3 py-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Clear All
-          </button>
-        </div>
+        )}
       </div>
 
       {filteredTransactions.length === 0 ? (

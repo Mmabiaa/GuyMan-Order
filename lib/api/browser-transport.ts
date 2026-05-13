@@ -59,6 +59,34 @@ export async function postUpdatePaymentStatus(orderId: string, status: string): 
   return mapOrderDto(raw)
 }
 
+export async function putUpdateOrder(orderId: string, data: any): Promise<Order> {
+  const res = await fetch(
+    `${PROXY}/v1/orders/${encodeURIComponent(orderId)}`,
+    {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    }
+  )
+  if (res.status === 401) throw new Error("unauthorized")
+  if (!res.ok) throw new Error(await parseError(res))
+  const raw = (await res.json()) as Record<string, unknown>
+  return mapOrderDto(raw)
+}
+
+export async function deleteOrder(orderId: string): Promise<void> {
+  const res = await fetch(
+    `${PROXY}/v1/orders/${encodeURIComponent(orderId)}`,
+    {
+      method: "DELETE",
+      credentials: "include"
+    }
+  )
+  if (res.status === 401) throw new Error("unauthorized")
+  if (!res.ok) throw new Error(await parseError(res))
+}
+
 export async function postLogout(): Promise<void> {
   await fetch(`${PROXY}/v1/auth/logout`, {
     method: "POST",

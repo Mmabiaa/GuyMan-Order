@@ -63,6 +63,35 @@ export async function listActiveOrders() {
   return { items: orders.map(orderToDto) }
 }
 
+export async function deleteOrder(orderId: string) {
+  let deleted = await OrderModel.findOneAndDelete({ externalId: orderId, status: "ACTIVE" }).exec()
+  if (!deleted && mongoose.isValidObjectId(orderId)) {
+    deleted = await OrderModel.findOneAndDelete({ _id: orderId, status: "ACTIVE" }).exec()
+  }
+  if (!deleted) throw new HttpError(404, "Order not found or not in ACTIVE status")
+  return { success: true }
+}
+
+export async function updateOrder(orderId: string, updates: Partial<CreateOrderInput>) {
+  // We only allow updating ACTIVE orders
+  let updated = await OrderModel.findOneAndUpdate(
+    { externalId: orderId, status: "ACTIVE" },
+    { $set: updates },
+    { new: true }
+  ).exec()
+
+  if (!updated && mongoose.isValidObjectId(orderId)) {
+    updated = await OrderModel.findOneAndUpdate(
+      { _id: orderId, status: "ACTIVE" },
+      { $set: updates },
+      { new: true }
+    ).exec()
+  }
+
+  if (!updated) throw new HttpError(404, "Order not found or not in ACTIVE status")
+  return orderToDto(updated)
+}
+
 export async function completeOrder(orderId: string, completedByUserId: string) {
   // Prefer externalId since that is what the frontend uses.
   let updated = await OrderModel.findOneAndUpdate(

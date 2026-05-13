@@ -206,8 +206,14 @@ export function OrderForm({ onAddOrder }: OrderFormProps) {
                   <Input
                     type="number"
                     min="1"
-                    value={item.quantity}
-                    onChange={e => updateItem(idx, { quantity: parseInt(e.target.value) || 1 })}
+                    value={item.quantity || ""}
+                    onChange={e => {
+                      const val = e.target.value
+                      updateItem(idx, { quantity: val === "" ? 0 : parseInt(val) })
+                    }}
+                    onBlur={() => {
+                      if (item.quantity === 0) updateItem(idx, { quantity: 1 })
+                    }}
                     className="h-10 bg-background"
                   />
                 </div>
@@ -281,8 +287,14 @@ export function OrderForm({ onAddOrder }: OrderFormProps) {
               <Input
                 type="number"
                 min="1"
-                value={extra.quantity}
-                onChange={e => updateExtra(idx, { quantity: parseInt(e.target.value) || 1 })}
+                value={extra.quantity || ""}
+                onChange={e => {
+                  const val = e.target.value
+                  updateExtra(idx, { quantity: val === "" ? 0 : parseInt(val) })
+                }}
+                onBlur={() => {
+                  if (extra.quantity === 0) updateExtra(idx, { quantity: 1 })
+                }}
                 className="h-10 bg-background"
               />
             </div>

@@ -2,6 +2,21 @@
 
 All notable changes made during this session are documented below.
 
+## [2.2.0] - 2026-05-13
+
+### Added
+- **Order Editing**: Active (Pending) orders can now be edited directly from the Orders list. You can update customer details and individual item quantities.
+- **Order Deletion**: Added a delete (trash) icon for active orders to allow removal of mistakes.
+- **Improved Spacing**: Increased the vertical gap between the Place Order form and the Orders List for better visual separation.
+- **"Orders List" Header**: Standardized the header for the pending orders section.
+
+### Fixed
+- **Quantity Input Fix**: Quantity inputs in the order form can now be easily erased (empty state supported) without being forced back to "1" instantly.
+- **Selective Date Filtering**: Date range filtering now only applies to the "All History" tab. Daily transactions remain focused on today's logs only.
+
+### Improved
+- **Transaction Visibility**: History view now shows all transactions regardless of payment status, while the revenue card continues to track only confirmed PAID amounts.
+
 ## [2.1.0] - 2026-05-13
 
 ### Added
