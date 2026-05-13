@@ -14,26 +14,12 @@ async function parseError(res: Response): Promise<string> {
   return (body?.error as string) ?? `Request failed: ${res.status}`
 }
 
-export async function postOrder(input: {
-  customerName: string
-  phoneNumber: string
-  foodItem: string
-  size: string
-  amount: number
-  clientOrderId?: string
-}): Promise<Order> {
+export async function postOrder(input: any): Promise<Order> {
   const res = await fetch(`${PROXY}/v1/orders`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      clientOrderId: input.clientOrderId,
-      customerName: input.customerName,
-      phoneNumber: input.phoneNumber,
-      foodItem: input.foodItem,
-      size: input.size,
-      amount: input.amount
-    })
+    body: JSON.stringify(input)
   })
   if (res.status === 401) throw new Error("unauthorized")
   if (!res.ok) throw new Error(await parseError(res))
@@ -55,6 +41,50 @@ export async function postCompleteOrder(orderId: string): Promise<Order> {
   if (!res.ok) throw new Error(await parseError(res))
   const raw = (await res.json()) as Record<string, unknown>
   return mapOrderDto(raw)
+}
+
+export async function postUpdatePaymentStatus(orderId: string, status: string): Promise<Order> {
+  const res = await fetch(
+    `${PROXY}/v1/orders/${encodeURIComponent(orderId)}/update-payment-status`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status })
+    }
+  )
+  if (res.status === 401) throw new Error("unauthorized")
+  if (!res.ok) throw new Error(await parseError(res))
+  const raw = (await res.json()) as Record<string, unknown>
+  return mapOrderDto(raw)
+}
+
+export async function putUpdateOrder(orderId: string, data: any): Promise<Order> {
+  const res = await fetch(
+    `${PROXY}/v1/orders/${encodeURIComponent(orderId)}`,
+    {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    }
+  )
+  if (res.status === 401) throw new Error("unauthorized")
+  if (!res.ok) throw new Error(await parseError(res))
+  const raw = (await res.json()) as Record<string, unknown>
+  return mapOrderDto(raw)
+}
+
+export async function deleteOrder(orderId: string): Promise<void> {
+  const res = await fetch(
+    `${PROXY}/v1/orders/${encodeURIComponent(orderId)}`,
+    {
+      method: "DELETE",
+      credentials: "include"
+    }
+  )
+  if (res.status === 401) throw new Error("unauthorized")
+  if (!res.ok) throw new Error(await parseError(res))
 }
 
 export async function postLogout(): Promise<void> {

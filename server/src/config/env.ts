@@ -14,8 +14,8 @@ export const env = {
   jwtSecret: requireEnv("JWT_SECRET"),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
 
-  adminUsername: process.env.ADMIN_USERNAME ?? "admin",
-  adminPassword: process.env.ADMIN_PASSWORD ?? "Admin@123.",
+  adminUsername: process.env.ADMIN_USERNAME,
+  adminPassword: process.env.ADMIN_PASSWORD,
 
   corsOrigin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
 

@@ -1,71 +1,70 @@
-# GuyMan Administration Dashboard (Orders + Transactions)
+# 🍱 Guy Man Order Management System
 
-This project implements a secure administration dashboard using the Next.js App Router framework. The dashboard supports:
+A premium SaaS platform designed for high-efficiency food order management and financial tracking. Built with modern web technologies, it features real-time order processing, granular item customization, and a robust historical revenue tracking system.
 
-- Admin login (protected routes via `middleware.ts`)
-- Creating active orders
-- Viewing active orders
-- Marking orders as complete (which becomes part of transaction history)
-- Viewing completed transactions
+---
 
+## 🚀 Key Features
 
-## How to Run the Frontend Locally
+### 🛒 Order Management
+- **Granular Customization**: Support for multiple food packages and extras per order. Each size (Small, Medium, Large) can have its own independent quantity.
+- **Active Lifecycle**: Track orders from "Pending" to "Fulfilled".
+- **Dynamic Editing**: Edit customer details or adjust quantities on-the-fly for any active order.
+- **Safe Recovery**: Delete accidental or mistake orders before they are finalized.
 
-1. Ensure you have Node.js installed.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run:
-   ```bash
-   npm run dev
-   ```
-4. Open [http://localhost:3000](http://localhost:3000). You will be redirected to `/login`.
+### 💰 Financial Intelligence
+- **Decoupled Revenue**: Revenue is only recorded when **Payment Status** is explicitly set to `PAID`, ensuring accurate financial ledgering.
+- **Daily vs. History**: Automated 24-hour maturation rule—transactions join the "All History" revenue pool only after a 24-hour delay.
+- **Smart Filtering**: Advanced date-range filtering for transaction history with persistent payment status indicators.
 
-## Environment (frontend)
+### 🎨 User Experience
+- **Live Interface**: Real-time status updates and status indicators.
+- **Responsive Design**: Fully optimized for both desktop and mobile operational environments.
+- **Dynamic Headers**: Context-aware section headers and high-contrast, premium typography.
+- **Interactive Documentation**: Built-in Swagger UI for API exploration and testing.
 
-When the UI and API are on **different hosts** (e.g. `guyman-order.vercel.app` and `api-*.vercel.app`), the browser cannot send the httpOnly `auth-token` cookie to the API. The app uses a **same-origin proxy** at `/api/proxy/*` that forwards requests and attaches the cookie server-side.
+---
 
-- **`BACKEND_URL`** (recommended, server-only): full origin of the API, e.g. `https://api-guyman-order.vercel.app`. Used by the dashboard server load and the `/api/proxy` route.
+## 📖 API Documentation
 
-There is **no app logic registering a service worker**. A minimal `public/sw.js` and `ClearStaleServiceWorker` exist only so browsers can **drop legacy workers/caches** from older deploys. Data stays fresh (`cache: 'no-store'` where used, `router.refresh()` after mutations).
-- **`NEXT_PUBLIC_BACKEND_URL`**: optional fallback for `BACKEND_URL` (exposed to the client; prefer `BACKEND_URL` in production).
+The system includes a built-in Swagger UI for exploring the API endpoints:
+- **Primary URL**: `http://localhost:5000/docs` (Redirects to `/v1/docs`).
+- **Direct URL**: `http://localhost:5000/v1/docs`.
+- **JSON Spec**: `http://localhost:5000/v1/openapi.json`.
 
-On the **API** deployment, set **`CORS_ORIGIN`** to your Next.js origin (e.g. `https://guyman-order.vercel.app`).
+## 🔍 Debugging & Analytics
 
-## Backend (Node.js + MongoDB)
+The server is equipped with an analytical logging system:
+- **Request Logging**: Every non-GET request logs its body to the console for real-time debugging.
+- **Traceability**: All logs are timestamped and include the HTTP method and path.
 
-The **backend** owns authentication, validation, and persistence. The Next.js app is a UI shell: it loads data via the API (server-side `loadDashboardInitialData` for the home page, `/api/proxy` for browser mutations and login), and does not duplicate business rules. The backend provides:
+---
 
-- Login authentication
-- Add orders
-- View active orders
-- Mark orders as complete
-- View transactions (completed orders)
+## 🛠️ Technical Stack
 
-See the backend contract in `server/readme.md`.
+- **Frontend**: Next.js (App Router), Tailwind CSS, Lucide React, Radix UI.
+- **Backend**: Node.js, Express, MongoDB (Mongoose).
+- **Security**: JWT-based authentication, protected routes, and atomic database operations.
 
-## How to Run the Backend
+---
 
-1. Ensure you have MongoDB available and create `server/.env` with:
-   - `MONGODB_URI`
-   - `JWT_SECRET`
-   - (optional) `PORT`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `CORS_ORIGIN`
-2. Install and run:
-   ```bash
-   cd server
-   npm install
-   npm run dev
-   ```
-3. The backend exposes:
-   - `GET http://localhost:<PORT>/v1/healthz`
-   - `POST http://localhost:<PORT>/v1/auth/login`
-   - `GET http://localhost:<PORT>/v1/orders`
+## 🏁 Quick Start
 
-## Technical Stack (Frontend)
+### 1. Environment Setup
+Create a `.env` in the root and `/server` directories with your MongoDB URI and JWT Secret.
 
-- **Framework**: Next.js (App Router, Server Actions, Middleware)
-- **Styling**: Tailwind CSS
-- **Components**: Shadcn UI / Radix UI
-- **Form Validation**: React Hook Form, Zod
-- **Icons**: Lucide React
+### 2. Frontend Launch
+```bash
+pnpm install
+pnpm dev
+```
+
+### 3. Backend Launch
+```bash
+cd server
+pnpm install
+pnpm dev
+```
+
+---
+*Powered by Mmabiaa-CS*

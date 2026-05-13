@@ -15,11 +15,15 @@ import { TransactionsTable } from "@/components/transactions-table"
 import type { Order } from "@/lib/store"
 import {
   postCompleteOrder,
+  postUpdatePaymentStatus,
+  deleteOrder,
+  putUpdateOrder,
   postLogout,
   postOrder
 } from "@/lib/api/browser-transport"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import type { OrderItem, ExtraOrderItem } from "@/lib/store"
 
 type View = "orders" | "transactions"
 
@@ -61,8 +65,8 @@ export function Dashboard({
     (orderData: {
       customerName: string
       phoneNumber: string
-      foodItem: string
-      size: string
+      items: OrderItem[]
+      extras: ExtraOrderItem[]
       amount: number
     }) => {
       void (async () => {
@@ -86,6 +90,61 @@ export function Dashboard({
       void (async () => {
         try {
           await postCompleteOrder(id)
+          router.refresh()
+        } catch (err: unknown) {
+          if (err instanceof Error && err.message === "unauthorized") {
+            window.location.href = "/login"
+            return
+          }
+          console.error(err)
+        }
+      })()
+    },
+    [router]
+  )
+
+  const handleUpdatePaymentStatus = useCallback(
+    (id: string, status: string) => {
+      void (async () => {
+        try {
+          await postUpdatePaymentStatus(id, status)
+          router.refresh()
+        } catch (err: unknown) {
+          if (err instanceof Error && err.message === "unauthorized") {
+            window.location.href = "/login"
+            return
+          }
+          console.error(err)
+        }
+      })()
+    },
+    [router]
+  )
+
+  const handleDeleteOrder = useCallback(
+    (id: string) => {
+      if (!confirm("Are you sure you want to delete this order?")) return
+      void (async () => {
+        try {
+          await deleteOrder(id)
+          router.refresh()
+        } catch (err: unknown) {
+          if (err instanceof Error && err.message === "unauthorized") {
+            window.location.href = "/login"
+            return
+          }
+          console.error(err)
+        }
+      })()
+    },
+    [router]
+  )
+
+  const handleUpdateOrder = useCallback(
+    (id: string, updates: any) => {
+      void (async () => {
+        try {
+          await putUpdateOrder(id, updates)
           router.refresh()
         } catch (err: unknown) {
           if (err instanceof Error && err.message === "unauthorized") {
@@ -198,8 +257,8 @@ export function Dashboard({
           <>
             <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
-                  Active Orders
+                <h2 className="text-xl font-bold text-foreground sm:text-2xl tracking-tight">
+                  Orders list
                 </h2>
                 <p className="text-sm text-muted-foreground sm:text-base">
                   {orders.length} {orders.length === 1 ? "order" : "orders"}{" "}
@@ -216,22 +275,31 @@ export function Dashboard({
               )}
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-12">
               <OrderForm onAddOrder={handleAddOrder} />
-              <OrdersTable orders={orders} onCompleteOrder={handleCompleteOrder} />
+              <OrdersTable
+                orders={orders}
+                onCompleteOrder={handleCompleteOrder}
+                onConfirmPayment={(id) => handleUpdatePaymentStatus(id, "PAID")}
+                onDeleteOrder={handleDeleteOrder}
+                onUpdateOrder={handleUpdateOrder}
+              />
             </div>
           </>
         ) : (
           <>
             <div className="mb-6 sm:mb-8">
               <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
-                Transaction History
+                {formattedDate}
               </h2>
               <p className="text-sm text-muted-foreground sm:text-base">
-                Record of all completed orders
+                Record of completed transactions
               </p>
             </div>
-            <TransactionsTable transactions={transactions} />
+            <TransactionsTable
+              transactions={transactions}
+              onUpdatePaymentStatus={handleUpdatePaymentStatus}
+            />
           </>
         )}
       </main>
