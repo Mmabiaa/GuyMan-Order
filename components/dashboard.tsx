@@ -8,7 +8,8 @@ import {
   UtensilsCrossed,
   ClipboardList,
   LayoutDashboard,
-  LogOut
+  LogOut,
+  Clock // Added for visual flair
 } from "lucide-react"
 import { TransactionsTable } from "@/components/transactions-table"
 import type { Order } from "@/lib/store"
@@ -39,6 +40,18 @@ export function Dashboard({
   const [currentView, setCurrentView] = useState<View>("orders")
   const [loggingOut, setLoggingOut] = useState(false)
 
+  // State for Date and Time
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
   useEffect(() => {
     setOrders(initialOrders)
     setTransactions(initialTransactions)
@@ -61,7 +74,6 @@ export function Dashboard({
             window.location.href = "/login"
             return
           }
-          // eslint-disable-next-line no-console
           console.error(err)
         }
       })()
@@ -80,7 +92,6 @@ export function Dashboard({
             window.location.href = "/login"
             return
           }
-          // eslint-disable-next-line no-console
           console.error(err)
         }
       })()
@@ -97,16 +108,42 @@ export function Dashboard({
     })
   }, [])
 
+  // Formatter for Date and Time
+  const formattedDate = currentTime.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  })
+
+  const formattedTime = currentTime.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  })
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <UtensilsCrossed className="h-6 w-6 shrink-0 text-foreground" />
-            <h1 className="truncate text-lg font-semibold text-foreground sm:text-xl">
-              Guy Man
-            </h1>
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <UtensilsCrossed className="h-6 w-6 shrink-0 text-foreground" />
+              <h1 className="truncate text-lg font-semibold text-foreground sm:text-xl">
+                Guy Man
+              </h1>
+            </div>
+
+            {/* New Date and Time Display */}
+            <div className="hidden border-l border-border pl-4 md:block">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" />
+                <span>{formattedDate}</span>
+                <span className="text-foreground">{formattedTime}</span>
+              </div>
+            </div>
           </div>
+
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <nav className="flex min-w-0 flex-1 flex-wrap gap-1 sm:justify-end">
               <button
