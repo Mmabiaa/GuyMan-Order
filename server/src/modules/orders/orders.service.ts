@@ -7,8 +7,8 @@ type CreateOrderInput = {
   externalId?: string
   customerName: string
   phoneNumber: string
-  foodItem: string
-  size: string
+  items?: { foodItem: string; size: string; price: number; quantity: number }[]
+  extras?: { name: string; size: string; price: number; quantity: number }[]
   amount: number
 }
 
@@ -19,13 +19,43 @@ export async function createOrder(input: CreateOrderInput) {
     externalId,
     customerName: input.customerName,
     phoneNumber: input.phoneNumber,
-    foodItem: input.foodItem,
-    size: input.size,
+    items: input.items,
+    extras: input.extras,
     amount: input.amount,
-    status: "ACTIVE"
+    status: "ACTIVE",
+    paymentStatus: "UNPAID"
   })
 
   return orderToDto(order)
+}
+
+export async function confirmPayment(orderId: string) {
+  let updated = await OrderModel.findOneAndUpdate(
+    { externalId: orderId },
+    {
+      $set: {
+        paymentStatus: "PAID",
+        paidAt: new Date()
+      }
+    },
+    { new: true }
+  ).exec()
+
+  if (!updated && mongoose.isValidObjectId(orderId)) {
+    updated = await OrderModel.findOneAndUpdate(
+      { _id: orderId },
+      {
+        $set: {
+          paymentStatus: "PAID",
+          paidAt: new Date()
+        }
+      },
+      { new: true }
+    ).exec()
+  }
+
+  if (!updated) throw new HttpError(404, "Order not found")
+  return orderToDto(updated)
 }
 
 export async function listActiveOrders() {
@@ -69,20 +99,37 @@ export async function completeOrder(orderId: string, completedByUserId: string) 
   return orderToDto(updated)
 }
 
-export async function listTransactions(search?: string) {
-  const filter: Record<string, unknown> = { status: "COMPLETED" }
+export async function listTransactions(options: {
+  search?: string
+  status?: string
+  paymentStatus?: string
+  startDate?: Date
+  endDate?: Date
+  sort?: "recent" | "oldest"
+} = {}) {
+  const filter: Record<string, any> = { status: "COMPLETED" }
 
-  if (search && search.trim()) {
-    const q = search.trim()
-    // Basic text-ish filtering without requiring full-text index.
+  if (options.search && options.search.trim()) {
+    const q = options.search.trim()
     filter["$or"] = [
       { customerName: { $regex: q, $options: "i" } },
       { phoneNumber: { $regex: q, $options: "i" } },
-      { foodItem: { $regex: q, $options: "i" } }
+      { "items.foodItem": { $regex: q, $options: "i" } }
     ]
   }
 
-  const orders = await OrderModel.find(filter as any).sort({ createdAt: 1 }).exec()
+  if (options.paymentStatus) {
+    filter.paymentStatus = options.paymentStatus
+  }
+
+  if (options.startDate || options.endDate) {
+    filter.createdAt = {}
+    if (options.startDate) filter.createdAt.$gte = options.startDate
+    if (options.endDate) filter.createdAt.$lte = options.endDate
+  }
+
+  const sortOrder = options.sort === "oldest" ? 1 : -1
+  const orders = await OrderModel.find(filter).sort({ createdAt: sortOrder }).exec()
   return { items: orders.map(orderToDto) }
 }
 

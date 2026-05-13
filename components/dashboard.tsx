@@ -15,11 +15,13 @@ import { TransactionsTable } from "@/components/transactions-table"
 import type { Order } from "@/lib/store"
 import {
   postCompleteOrder,
+  postConfirmPayment,
   postLogout,
   postOrder
 } from "@/lib/api/browser-transport"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import type { OrderItem, ExtraOrderItem } from "@/lib/store"
 
 type View = "orders" | "transactions"
 
@@ -61,8 +63,8 @@ export function Dashboard({
     (orderData: {
       customerName: string
       phoneNumber: string
-      foodItem: string
-      size: string
+      items: OrderItem[]
+      extras: ExtraOrderItem[]
       amount: number
     }) => {
       void (async () => {
@@ -86,6 +88,24 @@ export function Dashboard({
       void (async () => {
         try {
           await postCompleteOrder(id)
+          router.refresh()
+        } catch (err: unknown) {
+          if (err instanceof Error && err.message === "unauthorized") {
+            window.location.href = "/login"
+            return
+          }
+          console.error(err)
+        }
+      })()
+    },
+    [router]
+  )
+
+  const handleConfirmPayment = useCallback(
+    (id: string) => {
+      void (async () => {
+        try {
+          await postConfirmPayment(id)
           router.refresh()
         } catch (err: unknown) {
           if (err instanceof Error && err.message === "unauthorized") {
@@ -218,7 +238,11 @@ export function Dashboard({
 
             <div className="space-y-6">
               <OrderForm onAddOrder={handleAddOrder} />
-              <OrdersTable orders={orders} onCompleteOrder={handleCompleteOrder} />
+              <OrdersTable
+                orders={orders}
+                onCompleteOrder={handleCompleteOrder}
+                onConfirmPayment={handleConfirmPayment}
+              />
             </div>
           </>
         ) : (

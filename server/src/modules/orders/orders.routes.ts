@@ -5,6 +5,7 @@ import { HttpError } from "../../shared/httpError"
 import { requireAuth } from "../auth/auth.middleware"
 import {
   completeOrderController,
+  confirmPaymentController,
   createOrderController,
   listActiveOrdersController,
   listTransactionsController
@@ -14,8 +15,18 @@ const createOrderSchema = z.object({
   clientOrderId: z.string().min(1).optional(),
   customerName: z.string().min(1),
   phoneNumber: z.string().min(1),
-  foodItem: z.string().min(1),
-  size: z.string().min(1),
+  items: z.array(z.object({
+    foodItem: z.string().min(1),
+    size: z.string().min(1),
+    price: z.number().min(0),
+    quantity: z.number().int().min(1)
+  })).optional(),
+  extras: z.array(z.object({
+    name: z.string().min(1),
+    size: z.string().min(1),
+    price: z.number().min(0),
+    quantity: z.number().int().min(1)
+  })).optional(),
   amount: z.number().finite().min(0)
 })
 
@@ -38,6 +49,12 @@ ordersRouter.post(
   "/orders/:id/complete",
   requireAuth,
   asyncHandler(completeOrderController)
+)
+
+ordersRouter.post(
+  "/orders/:id/confirm-payment",
+  requireAuth,
+  asyncHandler(confirmPaymentController)
 )
 
 ordersRouter.get(

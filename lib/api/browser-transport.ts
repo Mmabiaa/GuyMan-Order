@@ -14,26 +14,12 @@ async function parseError(res: Response): Promise<string> {
   return (body?.error as string) ?? `Request failed: ${res.status}`
 }
 
-export async function postOrder(input: {
-  customerName: string
-  phoneNumber: string
-  foodItem: string
-  size: string
-  amount: number
-  clientOrderId?: string
-}): Promise<Order> {
+export async function postOrder(input: any): Promise<Order> {
   const res = await fetch(`${PROXY}/v1/orders`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      clientOrderId: input.clientOrderId,
-      customerName: input.customerName,
-      phoneNumber: input.phoneNumber,
-      foodItem: input.foodItem,
-      size: input.size,
-      amount: input.amount
-    })
+    body: JSON.stringify(input)
   })
   if (res.status === 401) throw new Error("unauthorized")
   if (!res.ok) throw new Error(await parseError(res))
@@ -44,6 +30,22 @@ export async function postOrder(input: {
 export async function postCompleteOrder(orderId: string): Promise<Order> {
   const res = await fetch(
     `${PROXY}/v1/orders/${encodeURIComponent(orderId)}/complete`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({})
+    }
+  )
+  if (res.status === 401) throw new Error("unauthorized")
+  if (!res.ok) throw new Error(await parseError(res))
+  const raw = (await res.json()) as Record<string, unknown>
+  return mapOrderDto(raw)
+}
+
+export async function postConfirmPayment(orderId: string): Promise<Order> {
+  const res = await fetch(
+    `${PROXY}/v1/orders/${encodeURIComponent(orderId)}/confirm-payment`,
     {
       method: "POST",
       credentials: "include",
