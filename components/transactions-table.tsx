@@ -329,7 +329,7 @@ export function TransactionsTable({ transactions, onUpdatePaymentStatus }: Trans
 
       <div className="flex items-center justify-between px-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
         <p>RECORDS: {filteredTransactions.length} / {transactions.length}</p>
-        <p>GUY MAN SAAS v2.0</p>
+        <p>GUY MAN SAAS v2.0 <br />Powered by Mmabiaa-CS</p>
       </div>
     </div>
   )

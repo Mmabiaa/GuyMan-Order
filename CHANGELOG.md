@@ -39,4 +39,4 @@ All notable changes made during this session are documented below.
 - **Persistence**: Transactions are archived immediately upon order completion; payment status changes are persisted in real-time.
 
 ---
-*Powered by Antigravity AI*
+*Powered by Mmabiaa-CS*
