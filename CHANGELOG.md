@@ -10,7 +10,7 @@ All notable changes made during this session are documented below.
 - **Improved Spacing**: Increased the vertical gap between the Place Order form and the Orders List for better visual separation.
 - **"Orders List" Header**: Standardized the header for the pending orders section.
 - **Swagger Documentation**: Automated OpenAPI specification and Swagger UI (at `/v1/docs`) for easy API testing and reference.
-- **Analytical Logging**: Implemented a custom server-side logger that tracks request methods, URLs, and payloads for real-time debugging.
+- **Analytical Logging**: Implemented a custom server-side logger that tracks request methods, URLs, and payloads for real-time debugging. It includes automatic **security redaction** to ensure passwords and sensitive tokens are never stored in logs.
 
 ### Fixed
 - **Quantity Input Fix**: Quantity inputs in the order form can now be easily erased (empty state supported) without being forced back to "1" instantly.

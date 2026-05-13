@@ -24,14 +24,23 @@ export function createApp() {
   app.use(express.json({ limit: "1mb" }))
   app.use(cookieParser())
 
-  // Analytical Logger for Debugging
+  // Analytical Logger for Debugging (with Security Redaction)
   app.use((req, _res, next) => {
     const timestamp = new Date().toISOString()
     const method = req.method
     const url = req.url
+
     if (method !== "GET" && req.body && Object.keys(req.body).length > 0) {
+      // Create a shallow copy and redact sensitive fields
+      const sanitizedBody = { ...req.body }
+      const sensitiveFields = ["password", "token", "auth-token"]
+
+      sensitiveFields.forEach(field => {
+        if (field in sanitizedBody) sanitizedBody[field] = "[REDACTED]"
+      })
+
       // eslint-disable-next-line no-console
-      console.log(`[${timestamp}] ${method} ${url} - Body:`, JSON.stringify(req.body))
+      console.log(`[${timestamp}] ${method} ${url} - Body:`, JSON.stringify(sanitizedBody))
     } else {
       // eslint-disable-next-line no-console
       console.log(`[${timestamp}] ${method} ${url}`)
