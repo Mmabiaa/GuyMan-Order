@@ -34,12 +34,12 @@ export function createApp() {
 
   const openapiSpec = {
     openapi: "3.0.3",
-    info: { title: "GuyMan Backend", version: "0.1.0" },
-    servers: [{ url: `http://localhost:${env.port}/v1` }],
+    info: { title: "GuyMan API", version: "2.2.0", description: "API documentation for the Guy Man Order Management System" },
+    servers: [{ url: `/v1`, description: "Main API v1" }],
     tags: [
-      { name: "auth" },
-      { name: "orders" },
-      { name: "transactions" }
+      { name: "Auth", description: "Authentication endpoints" },
+      { name: "Orders", description: "Active order management" },
+      { name: "Transactions", description: "Historical transaction logs" }
     ],
     components: {
       securitySchemes: {
@@ -48,19 +48,41 @@ export function createApp() {
           in: "cookie",
           name: "auth-token"
         }
+      },
+      schemas: {
+        OrderItem: {
+          type: "object",
+          properties: {
+            foodItem: { type: "string" },
+            size: { type: "string" },
+            price: { type: "number" },
+            quantity: { type: "number" }
+          },
+          required: ["foodItem", "size", "price", "quantity"]
+        },
+        ExtraItem: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            size: { type: "string" },
+            price: { type: "number" },
+            quantity: { type: "number" }
+          },
+          required: ["name", "size", "price", "quantity"]
+        }
       }
     },
     paths: {
       "/healthz": {
         get: {
-          tags: ["auth"],
+          tags: ["Auth"],
           summary: "Health check",
           responses: { "200": { description: "OK" } }
         }
       },
       "/auth/login": {
         post: {
-          tags: ["auth"],
+          tags: ["Auth"],
           summary: "Login",
           requestBody: {
             required: true,
@@ -82,29 +104,29 @@ export function createApp() {
       },
       "/auth/logout": {
         post: {
-          tags: ["auth"],
+          tags: ["Auth"],
           summary: "Logout",
           responses: { "200": { description: "Logged out (cookie cleared)" } }
         }
       },
       "/auth/me": {
         get: {
-          tags: ["auth"],
-          summary: "Current user",
+          tags: ["Auth"],
+          summary: "Current user session info",
           security: [{ authTokenCookie: [] }],
           responses: { "200": { description: "User info" }, "401": { description: "Unauthorized" } }
         }
       },
       "/orders": {
         get: {
-          tags: ["orders"],
+          tags: ["Orders"],
           summary: "List active orders",
           security: [{ authTokenCookie: [] }],
-          responses: { "200": { description: "Active orders" } }
+          responses: { "200": { description: "Active orders list" } }
         },
         post: {
-          tags: ["orders"],
-          summary: "Create order",
+          tags: ["Orders"],
+          summary: "Create a new order",
           security: [{ authTokenCookie: [] }],
           requestBody: {
             required: true,
@@ -116,54 +138,82 @@ export function createApp() {
                     clientOrderId: { type: "string", nullable: true },
                     customerName: { type: "string" },
                     phoneNumber: { type: "string" },
-                    foodItem: { type: "string" },
-                    size: { type: "string" },
+                    items: { type: "array", items: { $ref: "#/components/schemas/OrderItem" } },
+                    extras: { type: "array", items: { $ref: "#/components/schemas/ExtraItem" } },
                     amount: { type: "number" }
                   },
-                  required: [
-                    "customerName",
-                    "phoneNumber",
-                    "foodItem",
-                    "size",
-                    "amount"
-                  ]
+                  required: ["customerName", "phoneNumber", "amount"]
                 }
               }
             }
           },
-          responses: { "201": { description: "Created order" } }
+          responses: { "201": { description: "Order created successfully" } }
+        }
+      },
+      "/orders/{id}": {
+        put: {
+          tags: ["Orders"],
+          summary: "Update an active order",
+          security: [{ authTokenCookie: [] }],
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    customerName: { type: "string" },
+                    phoneNumber: { type: "string" },
+                    items: { type: "array", items: { $ref: "#/components/schemas/OrderItem" } },
+                    extras: { type: "array", items: { $ref: "#/components/schemas/ExtraItem" } },
+                    amount: { type: "number" }
+                  }
+                }
+              }
+            }
+          },
+          responses: { "200": { description: "Order updated" }, "404": { description: "Not found or not active" } }
+        },
+        delete: {
+          tags: ["Orders"],
+          summary: "Delete an active order",
+          security: [{ authTokenCookie: [] }],
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          responses: { "200": { description: "Order deleted" }, "404": { description: "Not found or not active" } }
         }
       },
       "/orders/{id}/complete": {
         post: {
-          tags: ["orders"],
-          summary: "Complete order",
+          tags: ["Orders"],
+          summary: "Mark order as completed/fulfilled",
           security: [{ authTokenCookie: [] }],
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "string" }
-            }
-          ],
-          responses: { "200": { description: "Completed order" }, "404": { description: "Not found" } }
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          responses: { "200": { description: "Order fulfilled" }, "404": { description: "Order not found" } }
+        }
+      },
+      "/orders/{id}/update-payment-status": {
+        post: {
+          tags: ["Orders"],
+          summary: "Update payment status (PAID, UNPAID, PENDING)",
+          security: [{ authTokenCookie: [] }],
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          requestBody: {
+            required: true,
+            content: { "application/json": { schema: { type: "object", properties: { status: { type: "string", enum: ["PAID", "UNPAID", "PENDING"] } } } } }
+          },
+          responses: { "200": { description: "Payment status updated" } }
         }
       },
       "/transactions": {
         get: {
-          tags: ["transactions"],
-          summary: "List transactions (completed orders)",
+          tags: ["Transactions"],
+          summary: "List historical transactions (completed orders)",
           security: [{ authTokenCookie: [] }],
           parameters: [
-            {
-              name: "search",
-              in: "query",
-              required: false,
-              schema: { type: "string" }
-            }
+            { name: "excludeRecent", in: "query", required: false, schema: { type: "boolean" }, description: "Exclude transactions from last 24h" }
           ],
-          responses: { "200": { description: "Transactions" } }
+          responses: { "200": { description: "Transactions list" } }
         }
       }
     }

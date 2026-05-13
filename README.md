@@ -21,6 +21,15 @@ A premium SaaS platform designed for high-efficiency food order management and f
 - **Live Interface**: Real-time status updates and status indicators.
 - **Responsive Design**: Fully optimized for both desktop and mobile operational environments.
 - **Dynamic Headers**: Context-aware section headers and high-contrast, premium typography.
+- **Interactive Documentation**: Built-in Swagger UI for API exploration and testing.
+
+---
+
+## 📖 API Documentation
+
+The system includes a built-in Swagger UI for exploring the API endpoints:
+- **URL**: `http://localhost:5000/v1/docs` (if backend is on port 5000).
+- **JSON Spec**: `http://localhost:5000/v1/openapi.json`.
 
 ---
 

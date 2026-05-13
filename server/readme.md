@@ -52,7 +52,7 @@ Request body:
 ```json
 {
   "username": "admin",
-  "password": "Admin@123."
+  "password": "password123"
 }
 ```
 
