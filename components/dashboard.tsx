@@ -15,7 +15,7 @@ import { TransactionsTable } from "@/components/transactions-table"
 import type { Order } from "@/lib/store"
 import {
   postCompleteOrder,
-  postConfirmPayment,
+  postUpdatePaymentStatus,
   postLogout,
   postOrder
 } from "@/lib/api/browser-transport"
@@ -101,11 +101,11 @@ export function Dashboard({
     [router]
   )
 
-  const handleConfirmPayment = useCallback(
-    (id: string) => {
+  const handleUpdatePaymentStatus = useCallback(
+    (id: string, status: string) => {
       void (async () => {
         try {
-          await postConfirmPayment(id)
+          await postUpdatePaymentStatus(id, status)
           router.refresh()
         } catch (err: unknown) {
           if (err instanceof Error && err.message === "unauthorized") {
@@ -219,7 +219,7 @@ export function Dashboard({
             <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
-                  Active Orders
+                  Available Orders
                 </h2>
                 <p className="text-sm text-muted-foreground sm:text-base">
                   {orders.length} {orders.length === 1 ? "order" : "orders"}{" "}
@@ -241,7 +241,7 @@ export function Dashboard({
               <OrdersTable
                 orders={orders}
                 onCompleteOrder={handleCompleteOrder}
-                onConfirmPayment={handleConfirmPayment}
+                onConfirmPayment={(id) => handleUpdatePaymentStatus(id, "PAID")}
               />
             </div>
           </>
@@ -249,13 +249,16 @@ export function Dashboard({
           <>
             <div className="mb-6 sm:mb-8">
               <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
-                Transaction History
+                {formattedDate}
               </h2>
               <p className="text-sm text-muted-foreground sm:text-base">
-                Record of all completed orders
+                Record of completed transactions
               </p>
             </div>
-            <TransactionsTable transactions={transactions} />
+            <TransactionsTable
+              transactions={transactions}
+              onUpdatePaymentStatus={handleUpdatePaymentStatus}
+            />
           </>
         )}
       </main>

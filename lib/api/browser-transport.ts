@@ -43,14 +43,14 @@ export async function postCompleteOrder(orderId: string): Promise<Order> {
   return mapOrderDto(raw)
 }
 
-export async function postConfirmPayment(orderId: string): Promise<Order> {
+export async function postUpdatePaymentStatus(orderId: string, status: string): Promise<Order> {
   const res = await fetch(
-    `${PROXY}/v1/orders/${encodeURIComponent(orderId)}/confirm-payment`,
+    `${PROXY}/v1/orders/${encodeURIComponent(orderId)}/update-payment-status`,
     {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({})
+      body: JSON.stringify({ status })
     }
   )
   if (res.status === 401) throw new Error("unauthorized")

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express"
-import { createOrder, completeOrder, confirmPayment, listActiveOrders, listTransactions } from "./orders.service"
+import { createOrder, completeOrder, updatePaymentStatus, listActiveOrders, listTransactions } from "./orders.service"
 
 export async function createOrderController(req: Request, res: Response) {
   const dto = await createOrder({
@@ -26,10 +26,13 @@ export async function completeOrderController(req: Request, res: Response) {
   return res.json(dto)
 }
 
-export async function confirmPaymentController(req: Request, res: Response) {
+export async function updatePaymentStatusController(req: Request, res: Response) {
   if (!req.user) return res.status(401).json({ error: "Unauthorized" })
 
-  const dto = await confirmPayment(req.params.id)
+  const { status } = req.body
+  if (!status) return res.status(400).json({ error: "Status is required" })
+
+  const dto = await updatePaymentStatus(req.params.id, status)
   return res.json(dto)
 }
 
@@ -37,6 +40,7 @@ export async function listTransactionsController(req: Request, res: Response) {
   const search = typeof req.query.search === "string" ? req.query.search : undefined
   const paymentStatus = typeof req.query.paymentStatus === "string" ? req.query.paymentStatus : undefined
   const sort = (req.query.sort === "recent" || req.query.sort === "oldest") ? req.query.sort : undefined
+  const excludeRecent = req.query.excludeRecent === "true"
 
   let startDate: Date | undefined
   let endDate: Date | undefined
@@ -53,8 +57,8 @@ export async function listTransactionsController(req: Request, res: Response) {
     paymentStatus,
     startDate,
     endDate,
-    sort
+    sort,
+    excludeRecent
   })
   return res.json(result)
 }
-

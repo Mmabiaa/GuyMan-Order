@@ -16,18 +16,22 @@ import { cn } from "@/lib/utils"
 
 interface TransactionsTableProps {
   transactions: Order[]
+  onUpdatePaymentStatus: (id: string, status: string) => void
 }
 
 type FilterStatus = "ALL" | "PAID" | "UNPAID" | "PENDING"
 type SortOrder = "recent" | "oldest"
 
-export function TransactionsTable({ transactions }: TransactionsTableProps) {
+export function TransactionsTable({ transactions, onUpdatePaymentStatus }: TransactionsTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState<"daily" | "history">("daily")
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("ALL")
   const [sortOrder, setSortOrder] = useState<SortOrder>("recent")
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
 
   const today = new Date().toDateString()
+  const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000
 
   // Filter and sort transactions
   const filteredTransactions = useMemo(() => {
@@ -36,11 +40,24 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
     // Tab filtering (Daily vs History)
     if (activeTab === "daily") {
       filtered = filtered.filter(t => new Date(t.createdAt).toDateString() === today)
+    } else {
+      // History: Join total only after 24 hours
+      filtered = filtered.filter(t => new Date(t.createdAt).getTime() < twentyFourHoursAgo)
     }
 
     // Status filtering
     if (statusFilter !== "ALL") {
       filtered = filtered.filter(t => t.paymentStatus === statusFilter)
+    }
+
+    // Date range filtering
+    if (startDate) {
+      filtered = filtered.filter(t => new Date(t.createdAt) >= new Date(startDate))
+    }
+    if (endDate) {
+      const end = new Date(endDate)
+      end.setHours(23, 59, 59, 999)
+      filtered = filtered.filter(t => new Date(t.createdAt) <= end)
     }
 
     // Search query filtering
@@ -60,7 +77,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
       const timeB = new Date(b.createdAt).getTime()
       return sortOrder === "recent" ? timeB - timeA : timeA - timeB
     })
-  }, [transactions, searchQuery, activeTab, statusFilter, sortOrder, today])
+  }, [transactions, searchQuery, activeTab, statusFilter, sortOrder, startDate, endDate, today, twentyFourHoursAgo])
 
   const formatCurrency = (amount: number) => {
     return `${amount} GHS`
@@ -80,12 +97,12 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
   const totalRevenue = useMemo(() => {
     const pool = activeTab === "daily"
       ? transactions.filter(t => new Date(t.createdAt).toDateString() === today)
-      : transactions
+      : transactions.filter(t => new Date(t.createdAt).getTime() < twentyFourHoursAgo)
 
     return pool
       .filter(t => t.paymentStatus === "PAID")
       .reduce((sum, t) => sum + t.amount, 0)
-  }, [transactions, activeTab, today])
+  }, [transactions, activeTab, today, twentyFourHoursAgo])
 
   return (
     <div className="space-y-6">
@@ -95,14 +112,15 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
           <div className="flex items-center gap-2 text-muted-foreground mb-1">
             <Calendar className="h-4 w-4" />
             <span className="text-sm font-medium uppercase tracking-wider">
-              {activeTab === "daily" ? "Today's Revenue" : "Total Revenue (History)"}
+              {activeTab === "daily" ? "Today's Revenue" : "Total Revenue (Historical)"}
             </span>
           </div>
           <p className="text-3xl font-black text-foreground">
             {formatCurrency(totalRevenue)}
           </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            * Only includes confirmed <strong>PAID</strong> transactions
+          <p className="text-[10px] text-muted-foreground mt-2 italic leading-tight">
+            * Only includes confirmed <strong>PAID</strong> transactions.
+            {activeTab === "history" && " History excludes last 24h."}
           </p>
         </div>
 
@@ -116,7 +134,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                 activeTab === "daily" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              Daily Transactions
+              Daily
             </button>
             <button
               onClick={() => setActiveTab("history")}
@@ -125,7 +143,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                 activeTab === "history" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              All History
+              All History (24h+)
             </button>
           </div>
 
@@ -141,53 +159,80 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
         </div>
       </div>
 
-      {/* Filters Bar */}
-      <div className="flex flex-wrap items-center gap-3 border-y border-border/50 py-3">
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-muted-foreground">Filter:</span>
-        </div>
+      {/* Advanced Filters */}
+      <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-bold text-foreground">Filters</span>
+          </div>
 
-        <div className="flex gap-1">
-          {(["ALL", "PAID", "UNPAID", "PENDING"] as FilterStatus[]).map(status => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-semibold border transition-all",
-                statusFilter === status
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background text-muted-foreground border-border hover:border-primary/50"
-              )}
+          <div className="flex gap-1">
+            {(["ALL", "PAID", "UNPAID", "PENDING"] as FilterStatus[]).map(status => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={cn(
+                  "rounded-full px-3 py-1 text-[11px] font-bold border transition-all",
+                  statusFilter === status
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                )}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+
+          <div className="ml-auto flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+              className="bg-transparent text-sm font-bold focus:outline-none"
             >
-              {status}
-            </button>
-          ))}
+              <option value="recent">Recent First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-            className="bg-transparent text-sm font-medium focus:outline-none"
+        <div className="flex flex-wrap gap-3 pt-2 border-t border-border/50">
+          <div className="flex flex-1 min-w-[140px] flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase text-muted-foreground">Start Date</label>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="h-9 text-xs"
+            />
+          </div>
+          <div className="flex flex-1 min-w-[140px] flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase text-muted-foreground">End Date</label>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="h-9 text-xs"
+            />
+          </div>
+          <button
+            onClick={() => { setStartDate(""); setEndDate(""); setStatusFilter("ALL"); setSearchQuery("") }}
+            className="self-end px-3 py-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
           >
-            <option value="recent">Recent First</option>
-            <option value="oldest">Oldest First</option>
-          </select>
+            Clear All
+          </button>
         </div>
       </div>
 
       {filteredTransactions.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-muted/20 p-12 text-center">
+        <div className="rounded-xl border border-dashed border-border bg-muted/10 p-12 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-            <Search className="h-6 w-6 text-muted-foreground/50" />
+            <Search className="h-6 w-6 text-muted-foreground/30" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground">No transactions found</h3>
-          <p className="text-muted-foreground max-w-xs mx-auto">
-            {transactions.length === 0
-              ? "Start by completing some orders to see them here."
-              : "Try adjusting your filters or search terms."}
+          <h3 className="text-lg font-bold text-foreground">No matching records</h3>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            Try adjusting your filters or switching tabs.
           </p>
         </div>
       ) : (
@@ -195,72 +240,92 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-border bg-muted/30 hover:bg-muted/30">
+                <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
                   <TableHead className="w-[50px] text-muted-foreground">#</TableHead>
-                  <TableHead className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Customer</TableHead>
-                  <TableHead className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Order Items</TableHead>
-                  <TableHead className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Total Amount</TableHead>
-                  <TableHead className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Payment Status</TableHead>
-                  <TableHead className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider text-right">Date Completed</TableHead>
+                  <TableHead className="text-muted-foreground uppercase text-[10px] font-black tracking-widest">Customer</TableHead>
+                  <TableHead className="text-muted-foreground uppercase text-[10px] font-black tracking-widest">Order Details</TableHead>
+                  <TableHead className="text-muted-foreground uppercase text-[10px] font-black tracking-widest">Amount</TableHead>
+                  <TableHead className="text-muted-foreground uppercase text-[10px] font-black tracking-widest">Payment Status</TableHead>
+                  <TableHead className="text-muted-foreground uppercase text-[10px] font-black tracking-widest text-right">Completed</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransactions.map((transaction, index) => (
-                  <TableRow key={transaction.id} className="border-border hover:bg-muted/20">
-                    <TableCell className="text-muted-foreground font-mono text-xs">{index + 1}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-foreground">{transaction.customerName}</span>
-                        <span className="text-xs text-muted-foreground">{transaction.phoneNumber}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1 max-w-[250px]">
-                        {transaction.items && transaction.items.length > 0 ? (
-                          transaction.items.map((item, i) => (
-                            <span key={i} className="inline-block whitespace-nowrap rounded bg-secondary/50 px-1.5 py-0.5 text-[10px] border border-border/50">
-                              {item.quantity}x {item.foodItem} ({item.size})
+                {filteredTransactions.map((transaction, index) => {
+                  const isToday = new Date(transaction.createdAt).toDateString() === today
+                  return (
+                    <TableRow key={transaction.id} className="border-border hover:bg-muted/10">
+                      <TableCell className="text-muted-foreground font-mono text-[10px]">{index + 1}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-foreground text-sm tracking-tight">{transaction.customerName}</span>
+                          <span className="text-[10px] text-muted-foreground font-medium">{transaction.phoneNumber}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1 max-w-[300px]">
+                          {transaction.items && transaction.items.length > 0 ? (
+                            transaction.items.map((item, i) => (
+                              <span key={i} className="inline-block whitespace-nowrap rounded-md bg-secondary/80 px-1.5 py-0.5 text-[9px] font-bold border border-border/50 text-foreground">
+                                {item.quantity}x {item.foodItem} ({item.size})
+                              </span>
+                            ))
+                          ) : (
+                            <span className="rounded-md bg-secondary/80 px-1.5 py-0.5 text-[9px] font-bold border border-border/50 text-foreground">
+                              {transaction.foodItem} ({transaction.size})
                             </span>
-                          ))
+                          )}
+                          {transaction.extras && transaction.extras.length > 0 && (
+                            <span className="text-[9px] font-bold text-primary italic flex items-center">
+                              +{transaction.extras.reduce((sum, e) => sum + e.quantity, 0)} extras
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-black text-foreground text-sm">
+                        {formatCurrency(transaction.amount)}
+                      </TableCell>
+                      <TableCell>
+                        {isToday ? (
+                          <select
+                            value={transaction.paymentStatus}
+                            onChange={(e) => onUpdatePaymentStatus(transaction.id, e.target.value)}
+                            className={cn(
+                              "rounded-full px-2 py-1 text-[10px] font-black border uppercase focus:outline-none transition-colors cursor-pointer",
+                              transaction.paymentStatus === "PAID" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" :
+                                transaction.paymentStatus === "PENDING" ? "bg-amber-500/10 text-amber-600 border-amber-500/30" :
+                                  "bg-destructive/10 text-destructive border-destructive/30"
+                            )}
+                          >
+                            <option value="PAID">Paid</option>
+                            <option value="UNPAID">Unpaid</option>
+                            <option value="PENDING">Pending</option>
+                          </select>
                         ) : (
-                          <span className="rounded bg-secondary/50 px-1.5 py-0.5 text-[10px] border border-border/50">
-                            {transaction.foodItem} ({transaction.size})
+                          <span className={cn(
+                            "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black border uppercase",
+                            transaction.paymentStatus === "PAID" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
+                              transaction.paymentStatus === "PENDING" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
+                                "bg-destructive/10 text-destructive border-destructive/20"
+                          )}>
+                            {transaction.paymentStatus}
                           </span>
                         )}
-                        {transaction.extras && transaction.extras.length > 0 && (
-                          <span className="text-[10px] text-muted-foreground italic flex items-center">
-                            + {transaction.extras.length} extras
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-bold text-foreground">
-                      {formatCurrency(transaction.amount)}
-                    </TableCell>
-                    <TableCell>
-                      <span className={cn(
-                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold border",
-                        transaction.paymentStatus === "PAID" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
-                          transaction.paymentStatus === "PENDING" ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
-                            "bg-destructive/10 text-destructive border-destructive/20"
-                      )}>
-                        {transaction.paymentStatus === "PAID" ? "Paid" : transaction.paymentStatus === "PENDING" ? "Pending" : "Unpaid"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right text-xs font-medium text-muted-foreground">
-                      {formatDateTime(transaction.createdAt)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="text-right text-[10px] font-bold text-muted-foreground whitespace-nowrap">
+                        {formatDateTime(transaction.createdAt)}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </div>
         </div>
       )}
 
-      <div className="flex items-center justify-between px-2 text-xs text-muted-foreground">
-        <p>Showing {filteredTransactions.length} of {transactions.length} record{transactions.length !== 1 ? 's' : ''}</p>
-        <p>Powered by Guy Man SaaS</p>
+      <div className="flex items-center justify-between px-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+        <p>RECORDS: {filteredTransactions.length} / {transactions.length}</p>
+        <p>GUY MAN SAAS v2.0</p>
       </div>
     </div>
   )

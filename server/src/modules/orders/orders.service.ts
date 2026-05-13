@@ -29,27 +29,24 @@ export async function createOrder(input: CreateOrderInput) {
   return orderToDto(order)
 }
 
-export async function confirmPayment(orderId: string) {
+export async function updatePaymentStatus(orderId: string, status: PaymentStatus) {
+  const update: any = { paymentStatus: status }
+  if (status === "PAID") {
+    update.paidAt = new Date()
+  } else {
+    update.paidAt = null
+  }
+
   let updated = await OrderModel.findOneAndUpdate(
     { externalId: orderId },
-    {
-      $set: {
-        paymentStatus: "PAID",
-        paidAt: new Date()
-      }
-    },
+    { $set: update },
     { new: true }
   ).exec()
 
   if (!updated && mongoose.isValidObjectId(orderId)) {
     updated = await OrderModel.findOneAndUpdate(
       { _id: orderId },
-      {
-        $set: {
-          paymentStatus: "PAID",
-          paidAt: new Date()
-        }
-      },
+      { $set: update },
       { new: true }
     ).exec()
   }
@@ -106,6 +103,7 @@ export async function listTransactions(options: {
   startDate?: Date
   endDate?: Date
   sort?: "recent" | "oldest"
+  excludeRecent?: boolean // Add this to support the 24h rule
 } = {}) {
   const filter: Record<string, any> = { status: "COMPLETED" }
 
@@ -122,10 +120,16 @@ export async function listTransactions(options: {
     filter.paymentStatus = options.paymentStatus
   }
 
-  if (options.startDate || options.endDate) {
+  if (options.startDate || options.endDate || options.excludeRecent) {
     filter.createdAt = {}
     if (options.startDate) filter.createdAt.$gte = options.startDate
     if (options.endDate) filter.createdAt.$lte = options.endDate
+    if (options.excludeRecent) {
+      // Exclude everything from the last 24 hours
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      filter.createdAt.$lt = twentyFourHoursAgo
+    }
+    if (Object.keys(filter.createdAt).length === 0) delete filter.createdAt
   }
 
   const sortOrder = options.sort === "oldest" ? 1 : -1
