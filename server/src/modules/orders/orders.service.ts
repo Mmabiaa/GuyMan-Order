@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto"
 import mongoose from "mongoose"
 import { HttpError } from "../../shared/httpError"
-import { OrderModel, orderToDto, type OrderDoc } from "./order.model"
+import { OrderModel, orderToDto, PaymentStatus, type OrderDoc } from "./order.model"
 
 type CreateOrderInput = {
   externalId?: string
