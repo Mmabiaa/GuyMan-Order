@@ -23,7 +23,29 @@ export function createApp() {
   app.use(helmet())
   app.use(express.json({ limit: "1mb" }))
   app.use(cookieParser())
+
+  // Analytical Logger for Debugging
+  app.use((req, _res, next) => {
+    const timestamp = new Date().toISOString()
+    const method = req.method
+    const url = req.url
+    if (method !== "GET" && req.body && Object.keys(req.body).length > 0) {
+      // eslint-disable-next-line no-console
+      console.log(`[${timestamp}] ${method} ${url} - Body:`, JSON.stringify(req.body))
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(`[${timestamp}] ${method} ${url}`)
+    }
+    next()
+  })
+
   app.use(morgan("dev"))
+
+  // Documentation Redirects
+  app.get("/", (_req, res) => res.redirect("/v1/docs"))
+  app.get("/docs", (_req, res) => res.redirect("/v1/docs"))
+  app.get("/api/docs", (_req, res) => res.redirect("/v1/docs"))
+  app.get("/v1/api/docs", (_req, res) => res.redirect("/v1/docs"))
 
   app.use(
     cors({

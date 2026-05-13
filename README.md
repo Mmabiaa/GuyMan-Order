@@ -28,8 +28,15 @@ A premium SaaS platform designed for high-efficiency food order management and f
 ## 📖 API Documentation
 
 The system includes a built-in Swagger UI for exploring the API endpoints:
-- **URL**: `http://localhost:5000/v1/docs` (if backend is on port 5000).
+- **Primary URL**: `http://localhost:5000/docs` (Redirects to `/v1/docs`).
+- **Direct URL**: `http://localhost:5000/v1/docs`.
 - **JSON Spec**: `http://localhost:5000/v1/openapi.json`.
+
+## 🔍 Debugging & Analytics
+
+The server is equipped with an analytical logging system:
+- **Request Logging**: Every non-GET request logs its body to the console for real-time debugging.
+- **Traceability**: All logs are timestamped and include the HTTP method and path.
 
 ---
 
