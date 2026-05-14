@@ -5,9 +5,10 @@ All notable changes made during this session are documented below.
 ## [2.3.0] - 2026-05-13
 
 ### Added
-- **Mobile App Experience**: Transformed the horizontal tables into interactive **Mobile Cards**. This provides a native app-like feel on small screens while preserving the professional table view on desktops.
-- **Mobile Bottom Navigation**: Replaced the top header navigation with a sleek, fixed-bottom navigation bar on mobile devices for better reachability.
-- **Improved Responsiveness**: Optimized spacing and paddings specifically for mobile users, including a bottom-floating navigation with backdrop blur effects.
+- **Triple-View Mobile Interface**: Split the Orders page into three dedicated tabs for mobile users: **New Order** (Form), **Active** (Pending List), and **History** (Transactions). This maximizes screen space and focus for each task.
+- **Improved Navigation**: Added a **Logout (Exit)** button to the mobile bottom navigation for faster session management.
+- **Smart View Transition**: Added logic to automatically switch to the 'Active' orders view after placing a new order on mobile, streamlining the workflow.
+- **App-Like Feel**: Enhanced the bottom navigation with high-definition icons, backdrop blur effects, and active state animations.
 
 ## [2.2.0] - 2026-05-13
 
