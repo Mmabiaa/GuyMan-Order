@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { Search, Calendar, Filter, ArrowUpDown } from "lucide-react"
+import { Search, Calendar, Filter, ArrowUpDown, User, Phone, ShoppingBag, Clock } from "lucide-react"
 import type { Order } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
@@ -110,29 +110,29 @@ export function TransactionsTable({ transactions, onUpdatePaymentStatus }: Trans
     <div className="space-y-6">
       {/* Revenue Header Card */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col justify-center rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="flex flex-col justify-center rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="flex items-center gap-2 text-muted-foreground mb-1">
             <Calendar className="h-4 w-4" />
-            <span className="text-sm font-medium uppercase tracking-wider">
-              {activeTab === "daily" ? "Today's Revenue" : "Total Revenue (Historical)"}
+            <span className="text-sm font-black uppercase tracking-widest text-[10px]">
+              {activeTab === "daily" ? "Today's Revenue" : "Historical Revenue"}
             </span>
           </div>
-          <p className="text-3xl font-black text-foreground">
+          <p className="text-3xl font-black text-foreground tracking-tighter">
             {formatCurrency(totalRevenue)}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-2 italic leading-tight">
-            * Only includes confirmed <strong>PAID</strong> transactions.
-            {activeTab === "history" && " History excludes last 24h."}
+          <p className="text-[10px] text-muted-foreground mt-2 italic leading-tight font-medium">
+            * Sum of confirmed <strong className="text-emerald-600">PAID</strong> status.
+            {activeTab === "history" && " Excludes last 24h."}
           </p>
         </div>
 
         <div className="flex flex-col gap-2">
           {/* Custom Tabs */}
-          <div className="flex rounded-lg bg-muted p-1">
+          <div className="flex rounded-xl bg-muted p-1">
             <button
               onClick={() => setActiveTab("daily")}
               className={cn(
-                "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                "flex-1 rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest transition-all",
                 activeTab === "daily" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -141,41 +141,41 @@ export function TransactionsTable({ transactions, onUpdatePaymentStatus }: Trans
             <button
               onClick={() => setActiveTab("history")}
               className={cn(
-                "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                "flex-1 rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest transition-all",
                 activeTab === "history" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              All History (24h+)
+              All History
             </button>
           </div>
 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by customer, phone..."
+              placeholder="Search history..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 bg-input pl-10"
+              className="h-11 rounded-xl bg-input pl-10 text-sm font-medium"
             />
           </div>
         </div>
       </div>
 
       {/* Advanced Filters */}
-      <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-4">
+      <div className="rounded-2xl border border-border bg-muted/30 p-4 space-y-4">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-bold text-foreground">Filters</span>
+            <span className="text-xs font-black uppercase tracking-widest leading-none">Filters</span>
           </div>
 
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
             {(["ALL", "PAID", "UNPAID", "PENDING"] as FilterStatus[]).map(status => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
                 className={cn(
-                  "rounded-full px-3 py-1 text-[11px] font-bold border transition-all",
+                  "rounded-full px-3 py-1 text-[10px] font-black border transition-all whitespace-nowrap",
                   statusFilter === status
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-background text-muted-foreground border-border hover:border-primary/50"
@@ -191,57 +191,58 @@ export function TransactionsTable({ transactions, onUpdatePaymentStatus }: Trans
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-              className="bg-transparent text-sm font-bold focus:outline-none"
+              className="bg-transparent text-[10px] font-black uppercase tracking-widest focus:outline-none"
             >
-              <option value="recent">Recent First</option>
-              <option value="oldest">Oldest First</option>
+              <option value="recent">Recent</option>
+              <option value="oldest">Oldest</option>
             </select>
           </div>
         </div>
 
         {activeTab === "history" && (
-          <div className="flex flex-wrap gap-3 pt-2 border-t border-border/50">
-            <div className="flex flex-1 min-w-[140px] flex-col gap-1">
-              <label className="text-[10px] font-bold uppercase text-muted-foreground">Start Date</label>
+          <div className="flex flex-wrap gap-3 pt-3 border-t border-border/50">
+            <div className="flex flex-1 min-w-[120px] flex-col gap-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">From</label>
               <Input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="h-9 text-xs"
+                className="h-9 rounded-lg text-xs font-bold"
               />
             </div>
-            <div className="flex flex-1 min-w-[140px] flex-col gap-1">
-              <label className="text-[10px] font-bold uppercase text-muted-foreground">End Date</label>
+            <div className="flex flex-1 min-w-[120px] flex-col gap-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">To</label>
               <Input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="h-9 text-xs"
+                className="h-9 rounded-lg text-xs font-bold"
               />
             </div>
             <button
               onClick={() => { setStartDate(""); setEndDate(""); setStatusFilter("ALL"); setSearchQuery("") }}
-              className="self-end px-3 py-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
+              className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors self-end"
             >
-              Clear All
+              Reset
             </button>
           </div>
         )}
       </div>
 
       {filteredTransactions.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-muted/10 p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-border bg-muted/10 p-12 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <Search className="h-6 w-6 text-muted-foreground/30" />
           </div>
-          <h3 className="text-lg font-bold text-foreground">No matching records</h3>
-          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-            Try adjusting your filters or switching tabs.
+          <h3 className="text-base font-black text-foreground uppercase tracking-widest">No matching records</h3>
+          <p className="text-xs text-muted-foreground max-w-xs mx-auto mt-1">
+            Try adjusting your filters or search query.
           </p>
         </div>
       ) : (
-        <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <div className="overflow-x-auto">
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
@@ -271,6 +272,7 @@ export function TransactionsTable({ transactions, onUpdatePaymentStatus }: Trans
                             transaction.items.map((item, i) => (
                               <span key={i} className="inline-block whitespace-nowrap rounded-md bg-secondary/80 px-1.5 py-0.5 text-[9px] font-bold border border-border/50 text-foreground">
                                 {item.quantity}x {item.foodItem} ({item.size})
+                                {item.price > 0 && ` - ${item.price} GHS`}
                               </span>
                             ))
                           ) : (
@@ -285,7 +287,7 @@ export function TransactionsTable({ transactions, onUpdatePaymentStatus }: Trans
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="font-black text-foreground text-sm">
+                      <TableCell className="font-black text-foreground text-sm tracking-tighter">
                         {formatCurrency(transaction.amount)}
                       </TableCell>
                       <TableCell>
@@ -306,7 +308,7 @@ export function TransactionsTable({ transactions, onUpdatePaymentStatus }: Trans
                           </select>
                         ) : (
                           <span className={cn(
-                            "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black border uppercase",
+                            "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black border uppercase tracking-tighter",
                             transaction.paymentStatus === "PAID" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
                               transaction.paymentStatus === "PENDING" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
                                 "bg-destructive/10 text-destructive border-destructive/20"
@@ -324,12 +326,76 @@ export function TransactionsTable({ transactions, onUpdatePaymentStatus }: Trans
               </TableBody>
             </Table>
           </div>
-        </div>
+
+          {/* Mobile Card View */}
+          <div className="grid gap-3 md:hidden">
+            {filteredTransactions.map((transaction) => {
+              const isToday = new Date(transaction.createdAt).toDateString() === today
+              return (
+                <div key={transaction.id} className="rounded-2xl border border-border bg-card p-4 space-y-4 shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-0.5">
+                      <h4 className="font-black text-foreground text-sm tracking-tight">{transaction.customerName}</h4>
+                      <p className="text-[10px] text-muted-foreground font-bold flex items-center gap-1">
+                        <Phone className="h-2.5 w-2.5" /> {transaction.phoneNumber}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Amount</p>
+                      <p className="text-sm font-black text-foreground tracking-tighter">{formatCurrency(transaction.amount)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 py-2 border-y border-border/50">
+                    {transaction.items?.map((item, i) => (
+                      <div key={i} className="flex items-center gap-1 rounded-lg bg-secondary/30 px-2 py-1">
+                        <span className="text-[9px] font-black text-primary">{item.quantity}x</span>
+                        <span className="text-[9px] font-bold text-foreground">{item.foodItem}</span>
+                        <span className="text-[8px] text-muted-foreground uppercase font-black tracking-tighter">({item.size})</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-1">
+                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground">
+                      <Clock className="h-3 w-3" /> {formatDateTime(transaction.createdAt)}
+                    </div>
+                    {isToday ? (
+                      <select
+                        value={transaction.paymentStatus}
+                        onChange={(e) => onUpdatePaymentStatus(transaction.id, e.target.value)}
+                        className={cn(
+                          "rounded-full px-3 py-1.5 text-[10px] font-black border uppercase focus:outline-none shadow-sm",
+                          transaction.paymentStatus === "PAID" ? "bg-emerald-600 text-white border-emerald-600" :
+                            transaction.paymentStatus === "PENDING" ? "bg-amber-500 text-white border-amber-500" :
+                              "bg-destructive text-white border-destructive"
+                        )}
+                      >
+                        <option value="PAID">Paid</option>
+                        <option value="UNPAID">Unpaid</option>
+                        <option value="PENDING">Pending</option>
+                      </select>
+                    ) : (
+                      <span className={cn(
+                        "rounded-full px-3 py-1 text-[9px] font-black border uppercase tracking-tighter",
+                        transaction.paymentStatus === "PAID" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
+                          transaction.paymentStatus === "PENDING" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
+                            "bg-destructive/10 text-destructive border-destructive/20"
+                      )}>
+                        {transaction.paymentStatus}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
       )}
 
-      <div className="flex items-center justify-between px-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-        <p>RECORDS: {filteredTransactions.length} / {transactions.length}</p>
-        <p>GUY MAN SAAS v2.0 <br />Powered by Mmabiaa-CS</p>
+      <div className="flex items-center justify-between px-2 pt-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+        <p>RECORDS: {filteredTransactions.length}</p>
+        <p className="text-right">GUY MAN SAAS v2.5 <br />Powered by Mmabiaa-CS</p>
       </div>
     </div>
   )
